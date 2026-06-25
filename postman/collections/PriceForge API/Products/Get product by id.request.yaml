@@ -1,0 +1,46 @@
+$kind: http-request
+name: Get product by id
+url: "{{baseUrl}}/api/{{apiVersion}}/products/{{productId}}/price?quantity=10&t\
+  ier=Vip&region=EU"
+method: GET
+queryParams:
+  quantity: "10"
+  tier: Vip
+  region: EU
+body:
+  type: json
+  content: ""
+auth:
+  type: bearer
+  credentials:
+    token: "{{accessToken}}"
+scripts:
+  - type: afterResponse
+    code: "const product = pm.response.json();\r
+
+      \r
+
+      pm.test(\"Status 200\", () => pm.response.to.have.status(200));\r
+
+      pm.test(\"Has all fields\", () => {\r
+
+      \    pm.expect(product).to.have.property(\"id\");\r
+
+      \    pm.expect(product).to.have.property(\"sku\");\r
+
+      \    pm.expect(product).to.have.property(\"name\");\r
+
+      \    pm.expect(product).to.have.property(\"price\");\r
+
+      \    pm.expect(product).to.have.property(\"currency\");\r
+
+      });\r
+
+      pm.test(\"Returned id matches created\", () => {\r
+
+      \    pm.expect(product.id).to.eql(pm.collectionVariables.get(\"productId\
+      \"));\r
+
+      });"
+    language: text/javascript
+order: 3000

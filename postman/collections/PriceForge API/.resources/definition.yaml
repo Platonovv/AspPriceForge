@@ -1,0 +1,6 @@
+$kind: collection
+name: PriceForge API
+variables:
+  apiVersion: ""
+  productId: ""
+  accessToken: ""

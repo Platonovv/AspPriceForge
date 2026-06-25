@@ -1,0 +1,50 @@
+$kind: http-request
+name: Create product
+url: "{{baseUrl}}/api/{{apiVersion}}/products"
+method: POST
+headers:
+  Idempotency-Key: "{{$guid}}"
+body:
+  type: json
+  content: "{\r
+
+    \  \"sku\": \"Mongo8\",\r
+
+    \  \"name\": \"Mongo 8 Product\",\r
+
+    \  \"price\": 2,\r
+
+    \  \"currency\": \"RUB\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: "{{accessToken}}"
+scripts:
+  - type: afterResponse
+    code: "// chaining: сохранить id для следующих запросов\r
+
+      const id = pm.response.json();\r
+
+      pm.collectionVariables.set(\"productId\", id);\r
+
+      \r
+
+      // тесты\r
+
+      pm.test(\"Status 201\", () => pm.response.to.have.status(201));\r
+
+      pm.test(\"Body has id (non-empty string)\", () => {\r
+
+      \    pm.expect(id).to.be.a(\"string\");\r
+
+      \    pm.expect(id).to.not.be.empty;\r
+
+      });\r
+
+      pm.test(\"Has Location header\", () => pm.response.to.have.header(\"Location\"));\r
+
+      pm.test(\"Response < 1000ms\", () => pm.expect(pm.response.responseTime).to.be.below(1000));"
+    language: text/javascript
+order: 2000

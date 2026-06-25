@@ -1,0 +1,157 @@
+﻿services:
+  priceforge:
+    build:
+      context: .
+      dockerfile: src/PriceForge.Api/Dockerfile
+    container_name: priceforge-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=priceforge;Username=priceforge;Password=${DB_PASSWORD};Include Error Detail=true"
+      ConnectionStrings__Redis: "redis:6379"
+      ConnectionStrings__RabbitMq: "amqp://priceforge:${DB_PASSWORD}@rabbitmq:5672/"
+      ConnectionStrings__Mongo: "mongodb://priceforge:${DB_PASSWORD}@mongo:27017/"
+      ConnectionStrings__Elasticsearch: "http://elasticsearch:9200"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      Jwt__Issuer: PriceForge
+      Jwt__Audience: PriceForgeUsers
+      Jwt__Secret: ${JWT_SECRET}
+      Jwt__AccessTokenMinutes: "15"
+      Jwt__RefreshTokenDays: "30"
+      Smtp__Host: smtp.gmail.com
+      Smtp__Port: "465"
+      Smtp__User: platonovaivan49@gmail.com
+      Smtp__Password: ${SMTP_PASSWORD}
+      Smtp__From: platonovaivan49@gmail.com
+      Smtp__To: platonovaivan49@gmail.com
+      Firebase__CredentialsPath: /app/firebase-creds.json
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./priceforge-b70f8-firebase-adminsdk-fbsvc-28967e1885.json:/app/firebase-creds.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      mongo:
+        condition: service_started
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: priceforge-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: priceforge
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: priceforge
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U priceforge -d priceforge" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: priceforge-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: priceforge-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: priceforge
+      RABBITMQ_DEFAULT_PASS: ${DB_PASSWORD}
+
+  mongo:
+    image: mongo:7
+    container_name: priceforge-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: priceforge
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+      MONGO_INITDB_DATABASE: priceforge
+    volumes:
+      - mongo-data:/data/db
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: priceforge-elasticsearch
+    restart: unless-stopped
+    ports:
+      - '9200:9200'
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: false
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.0
+    container_name: priceforge-kibana
+    restart: unless-stopped
+    ports:
+      - '5601:5601'
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.60
+    container_name: priceforge-jaeger
+    restart: unless-stopped
+    ports:
+      - '16686:16686'
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.109.0
+    container_name: priceforge-otel-collector
+    restart: unless-stopped
+    ports:
+      - '4317:4317'
+      - '4318:4318'
+      - '8889:8889'
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+    depends_on: [ jaeger ]
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: priceforge-prometheus
+    restart: unless-stopped
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on: [ otel-collector ]
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: priceforge-grafana
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on: [ prometheus ]
+
+
+
+
+volumes:
+  postgres-data:
+  mongo-data:

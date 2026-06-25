@@ -1,0 +1,17 @@
+$kind: http-request
+name: Get Product Price By Id
+url: "{{baseUrl}}/api/{{apiVersion}}/products/{{productId}}/price?quantity=10&t\
+  ier=Vip&region=EU"
+method: GET
+queryParams:
+  quantity: "10"
+  tier: Vip
+  region: EU
+body:
+  type: json
+  content: ""
+auth:
+  type: bearer
+  credentials:
+    token: "{{accessToken}}"
+order: 4000

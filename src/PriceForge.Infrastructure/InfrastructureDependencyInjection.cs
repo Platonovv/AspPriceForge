@@ -1,0 +1,95 @@
+﻿using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
+using MongoDB.Driver;
+using PriceForge.Application.Authentication;
+using PriceForge.Application.Brokers;
+using PriceForge.Application.Common;
+using PriceForge.Application.DeviceTokens;
+using PriceForge.Application.Notifications;
+using PriceForge.Application.Products;
+using PriceForge.Infrastructure.Authentication;
+using PriceForge.Infrastructure.Notifications;
+using PriceForge.Infrastructure.Persistence;
+using PriceForge.Infrastructure.Persistence.Brokers;
+using PriceForge.Infrastructure.Persistence.Factory;
+using PriceForge.Infrastructure.Persistence.Queries;
+using PriceForge.Infrastructure.Persistence.Repositories;
+using RabbitMQ.Client;
+
+namespace PriceForge.Infrastructure;
+
+public static class InfrastructureDependencyInjection
+{
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    {
+        string firebaseCredPath = configuration["Firebase:CredentialsPath"]!;
+        if (FirebaseApp.DefaultInstance is null
+            && !string.IsNullOrWhiteSpace(firebaseCredPath)
+            && File.Exists(firebaseCredPath))
+        {
+            FirebaseApp.Create(new AppOptions {Credential = GoogleCredential.FromFile(firebaseCredPath)});
+        }
+
+        services.AddDbContext<AppDbContext>(options
+                                                => options.UseNpgsql(configuration.GetConnectionString("Postgres")!));
+        services.AddMemoryCache();
+        services.AddStackExchangeRedisCache(options => options.Configuration
+                                                           = configuration.GetConnectionString("Redis")!);
+
+        services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+        services.Configure<SmtpSettings>(configuration.GetSection("Smtp"));
+
+        services.AddSingleton<IConnection>(_ =>
+        {
+            string rabbitUri = configuration.GetConnectionString("RabbitMq")!;
+            var connectionFactory = new ConnectionFactory {Uri = new Uri(rabbitUri)};
+            return connectionFactory.CreateConnectionAsync().GetAwaiter().GetResult();
+        });
+
+        BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
+        services.AddSingleton<IMongoDatabase>(_ =>
+        {
+            var client = new MongoClient(configuration.GetConnectionString("Mongo")!);
+            return client.GetDatabase("priceforge");
+        });
+
+        services.AddSingleton<IProductEventStore, MongoEventStore>();
+
+        services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
+        services.AddScoped<IDapperQuery, DapperQuery>();
+
+        services.AddScoped<IIntegrationEventHandler, ProductCreatedEventHandler>();
+        services.AddScoped<IIntegrationEventHandler, ProductPriceChangedEventHandler>();
+
+        services.AddScoped<INotificationChannel, EmailChannel>();
+        services.AddScoped<INotificationChannel, PushChannel>();
+
+        services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+
+        services.AddScoped<IEventPublisher, RabbitMqEventPublisher>();
+        services.AddHostedService<RabbitMqConsumer>();
+
+        services.AddScoped<IRefreshTokenRepository, EfRefreshTokenRepository>();
+        services.AddScoped<IOutboxRepository, EfOutboxRepository>();
+        services.AddScoped<IUserRepository, EfUserRepository>();
+        services.AddScoped<IDeviceTokenRepository, EfDeviceTokenRepository>();
+
+        services.AddScoped<EfProductRepository>();
+        services.AddScoped<IProductRepository>(provider =>
+        {
+            EfProductRepository inner = provider.GetRequiredService<EfProductRepository>();
+            IMemoryCache cache = provider.GetRequiredService<IMemoryCache>();
+            return new CachedProductRepository(inner, cache);
+        });
+
+        return services;
+    }
+}

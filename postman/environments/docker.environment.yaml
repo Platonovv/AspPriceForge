@@ -1,0 +1,4 @@
+name: docker
+values:
+  - key: baseUrl
+    value: ''

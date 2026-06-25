@@ -1,0 +1,32 @@
+﻿<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><title>PriceForge push</title>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
+</head>
+<body style="font-family:sans-serif;max-width:600px;margin:40px auto;background:#1e1e1e;color:#e0e0e0;padding:24px;">
+<h1>PriceForge — push</h1>
+<p>Статус: <strong id="status">нажми кнопку</strong></p>
+<button id="enable">Включить пуши</button>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCRUT3nxG4q0wLXxxzwhNnjBtLp5FLvlXw",
+        authDomain: "priceforge-b70f8.firebaseapp.com",
+        projectId: "priceforge-b70f8",
+        messagingSenderId: "1037402413004",
+        appId: "1:1037402413004:web:fc6ed5cd99f8f25e096f69"
+    };
+    const vapidKey = "BBU4tslkBmmD96cdHkLSKYltXAxaNsDFDew7bnubqLBtzowBnDJpag4ccaGZn6Zc6yoOlCsTppV1RkEPpv5kr-o";
+    firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
+    const status = document.getElementById("status");
+    document.getElementById("enable").onclick = async () => {
+        try {
+            if (await Notification.requestPermission() !== "granted") { status.textContent = "разрешение не дано"; return; }
+            const reg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+            const token = await messaging.getToken({ vapidKey, serviceWorkerRegistration: reg });
+            const res = await fetch("/api/v1/devices", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ token }) });
+            status.textContent = res.ok ? "готово ✅ пуши включены" : "ошибка регистрации " + res.status;
+        } catch (e) { status.textContent = "ошибка: " + e.message; }
+    };
+    messaging.onMessage(p => new Notification(p.notification.title, { body: p.notification.body }));
+</script></body></html>

@@ -1,0 +1,51 @@
+﻿using System.Security.Claims;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using PriceForge.Application.Authentication;
+
+namespace PriceForge.Api.Controllers;
+
+[ApiController]
+[Route("api/v1/auth")]
+public class AuthController : ControllerBase
+{
+    private readonly ISender _sender;
+
+    public AuthController(ISender sender)
+    {
+        _sender = sender;
+    }
+
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterCommand command, CancellationToken ct)
+    {
+        Guid id = await _sender.Send(command, ct);
+        return Created($"/api/v1/auth/{id}", id);
+    }
+
+    [EnableRateLimiting("EnterLogin")]
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginCommand command, CancellationToken ct)
+    {
+        LoginResult result = await _sender.Send(command, ct);
+        return Ok(result);
+    }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshCommand command, CancellationToken ct)
+    {
+        LoginResult result = await _sender.Send(command, ct);
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    public IActionResult Me()
+    {
+        string? userRole = User.FindFirstValue(ClaimTypes.Role);
+        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return Ok(new {userId, userRole});
+    }
+}

@@ -1,0 +1,78 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{17CDD776-10D5-42C2-993E-945996AEF1DF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PriceForge.Domain", "src\PriceForge.Domain\PriceForge.Domain.csproj", "{2651788D-8761-4AFC-A2A0-6A7116CC6B49}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PriceForge.Application", "src\PriceForge.Application\PriceForge.Application.csproj", "{CE6BFACB-E0D2-4B2F-B10D-CD91FFCF1AEF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PriceForge.Infrastructure", "src\PriceForge.Infrastructure\PriceForge.Infrastructure.csproj", "{C71E5608-2389-4743-80D8-808D1E79CAB6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PriceForge.Api", "src\PriceForge.Api\PriceForge.Api.csproj", "{CB9CFA89-DA3A-49AB-8E6F-16D74BDE505C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7204BEC4-B803-4AC3-9203-979BD68733B8}"
+	ProjectSection(SolutionItems) = preProject
+		compose.yaml = compose.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{2EE3A5D0-A02F-4E0A-AE70-590B47BAB3A9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PriceForge.Benchmarks", "benchmarks\PriceForge.Benchmarks\PriceForge.Benchmarks.csproj", "{84F7D05D-9D15-4BD6-AB01-8280898AF2C3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{07B51754-B30C-40EA-8646-82E21868B224}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PriceForge.UnitTests", "tests\PriceForge.UnitTests\PriceForge.UnitTests.csproj", "{7F507864-CC98-4A1C-BFB4-CB08DAA2152C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PriceForge.IntegrationTests", "tests\PriceForge.IntegrationTests\PriceForge.IntegrationTests.csproj", "{382C118C-CA01-4D95-B6A1-7474C369AB69}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2651788D-8761-4AFC-A2A0-6A7116CC6B49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2651788D-8761-4AFC-A2A0-6A7116CC6B49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2651788D-8761-4AFC-A2A0-6A7116CC6B49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2651788D-8761-4AFC-A2A0-6A7116CC6B49}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE6BFACB-E0D2-4B2F-B10D-CD91FFCF1AEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE6BFACB-E0D2-4B2F-B10D-CD91FFCF1AEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE6BFACB-E0D2-4B2F-B10D-CD91FFCF1AEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE6BFACB-E0D2-4B2F-B10D-CD91FFCF1AEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C71E5608-2389-4743-80D8-808D1E79CAB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C71E5608-2389-4743-80D8-808D1E79CAB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C71E5608-2389-4743-80D8-808D1E79CAB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C71E5608-2389-4743-80D8-808D1E79CAB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB9CFA89-DA3A-49AB-8E6F-16D74BDE505C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB9CFA89-DA3A-49AB-8E6F-16D74BDE505C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB9CFA89-DA3A-49AB-8E6F-16D74BDE505C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB9CFA89-DA3A-49AB-8E6F-16D74BDE505C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84F7D05D-9D15-4BD6-AB01-8280898AF2C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84F7D05D-9D15-4BD6-AB01-8280898AF2C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84F7D05D-9D15-4BD6-AB01-8280898AF2C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84F7D05D-9D15-4BD6-AB01-8280898AF2C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F507864-CC98-4A1C-BFB4-CB08DAA2152C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F507864-CC98-4A1C-BFB4-CB08DAA2152C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F507864-CC98-4A1C-BFB4-CB08DAA2152C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F507864-CC98-4A1C-BFB4-CB08DAA2152C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{382C118C-CA01-4D95-B6A1-7474C369AB69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{382C118C-CA01-4D95-B6A1-7474C369AB69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{382C118C-CA01-4D95-B6A1-7474C369AB69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{382C118C-CA01-4D95-B6A1-7474C369AB69}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2651788D-8761-4AFC-A2A0-6A7116CC6B49} = {17CDD776-10D5-42C2-993E-945996AEF1DF}
+		{CE6BFACB-E0D2-4B2F-B10D-CD91FFCF1AEF} = {17CDD776-10D5-42C2-993E-945996AEF1DF}
+		{C71E5608-2389-4743-80D8-808D1E79CAB6} = {17CDD776-10D5-42C2-993E-945996AEF1DF}
+		{CB9CFA89-DA3A-49AB-8E6F-16D74BDE505C} = {17CDD776-10D5-42C2-993E-945996AEF1DF}
+		{84F7D05D-9D15-4BD6-AB01-8280898AF2C3} = {2EE3A5D0-A02F-4E0A-AE70-590B47BAB3A9}
+		{7F507864-CC98-4A1C-BFB4-CB08DAA2152C} = {07B51754-B30C-40EA-8646-82E21868B224}
+		{382C118C-CA01-4D95-B6A1-7474C369AB69} = {07B51754-B30C-40EA-8646-82E21868B224}
+	EndGlobalSection
+EndGlobal

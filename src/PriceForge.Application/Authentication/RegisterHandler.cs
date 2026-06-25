@@ -1,0 +1,36 @@
+﻿using MediatR;
+using PriceForge.Domain.Users;
+
+namespace PriceForge.Application.Authentication;
+
+public sealed class RegisterHandler : IRequestHandler<RegisterCommand, Guid>
+{
+    private readonly IUserRepository _userRepository;
+    private readonly IPasswordHasher _passwordHasher;
+
+    public RegisterHandler(IUserRepository userRepository, IPasswordHasher passwordHasher)
+    {
+        ArgumentNullException.ThrowIfNull(userRepository);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
+
+        _userRepository = userRepository;
+        _passwordHasher = passwordHasher;
+    }
+
+    public async Task<Guid> Handle(RegisterCommand command, CancellationToken cancellationToken)
+    {
+        User? userExist = await _userRepository.GetUserByEmailAsync(command.Email, cancellationToken);
+
+        if (userExist != null)
+        {
+            throw new InvalidOperationException("User already exists");
+        }
+
+        string hashPassword = _passwordHasher.Hash(command.Password);
+        var user = new User(command.Email, hashPassword, "User");
+
+        await _userRepository.AddAsync(user, cancellationToken);
+        await _userRepository.SaveChangesAsync(cancellationToken);
+        return user.Id;
+    }
+}

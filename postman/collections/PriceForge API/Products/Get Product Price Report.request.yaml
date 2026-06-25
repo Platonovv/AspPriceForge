@@ -1,0 +1,9 @@
+$kind: http-request
+name: Get Product Price Report
+url: "{{baseUrl}}/api/{{apiVersion}}/products/price-report"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{accessToken}}"
+order: 1172308825738866

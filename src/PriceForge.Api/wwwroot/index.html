@@ -1,0 +1,33 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>PriceForge — live price</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+</head>
+<body style="font-family: sans-serif; max-width: 600px; margin: 40px auto;
+             background: #1e1e1e; color: #e0e0e0; min-height: 100vh; padding: 24px;">
+<h1>PriceForge — live обновления цены</h1>
+<p>Статус: <strong id="status">подключаюсь…</strong></p>
+<ul id="events"></ul>
+
+<script>
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/hubs/price")
+        .withAutomaticReconnect()
+        .build();
+
+    connection.on("PriceChanged", (data) => {
+        const li = document.createElement("li");
+        li.textContent = `Продукт ${data.id}: новая цена ${data.newPrice} ${data.currency} `
+            + `(${new Date().toLocaleTimeString()})`;
+        document.getElementById("events").prepend(li);
+    });
+
+    connection.start()
+        .then(() => document.getElementById("status").textContent = "подключено ✅")
+        .catch(err => document.getElementById("status").textContent = "ошибка: " + err);
+</script>
+</body>
+</html>

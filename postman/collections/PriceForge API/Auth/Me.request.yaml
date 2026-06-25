@@ -1,0 +1,12 @@
+$kind: http-request
+name: Me
+url: "{{baseUrl}}/api/{{apiVersion}}/auth/me"
+method: GET
+body:
+  type: json
+  content: ""
+auth:
+  type: bearer
+  credentials:
+    token: "{{accessToken}}"
+order: 4030209061837685

@@ -1,0 +1,6 @@
+@PriceForge.Api_HostAddress = http://localhost:5071
+
+GET {{PriceForge.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
