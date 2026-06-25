@@ -53,7 +53,14 @@ public static class InfrastructureDependencyInjection
             return connectionFactory.CreateConnectionAsync().GetAwaiter().GetResult();
         });
 
-        BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
+        try
+        {
+            BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
+        }
+        catch (BsonSerializationException)
+        {
+        }
+
         services.AddSingleton<IMongoDatabase>(_ =>
         {
             var client = new MongoClient(configuration.GetConnectionString("Mongo")!);
