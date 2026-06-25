@@ -53,4 +53,6 @@ jobs:
           context: .
           file: src/PriceForge.Api/Dockerfile
           push: true
-          tags: ghcr.io/platonovv/priceforge-api:latest
+          tags: |
+            ghcr.io/platonovv/priceforge-api:latest
+            ghcr.io/platonovv/priceforge-api:${{ github.sha }}
