@@ -116,6 +116,36 @@ namespace PriceForge.Infrastructure.Persistence.Migrations
                     b.ToTable("product_components", (string)null);
                 });
 
+            modelBuilder.Entity("PriceForge.Domain.Promotions.Promotion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("EndAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("end_at");
+
+                    b.Property<decimal>("Percent")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("percent");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<DateTime>("StartAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("start_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("promotions", (string)null);
+                });
+
             modelBuilder.Entity("PriceForge.Domain.Users.DeviceToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -269,6 +299,15 @@ namespace PriceForge.Infrastructure.Persistence.Migrations
                     b.HasOne("PriceForge.Domain.Products.Product", null)
                         .WithMany("Components")
                         .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PriceForge.Domain.Promotions.Promotion", b =>
+                {
+                    b.HasOne("PriceForge.Domain.Products.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

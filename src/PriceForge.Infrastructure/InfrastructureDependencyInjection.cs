@@ -14,6 +14,7 @@ using PriceForge.Application.Common;
 using PriceForge.Application.DeviceTokens;
 using PriceForge.Application.Notifications;
 using PriceForge.Application.Products;
+using PriceForge.Application.Promotions;
 using PriceForge.Infrastructure.Authentication;
 using PriceForge.Infrastructure.Notifications;
 using PriceForge.Infrastructure.Persistence;
@@ -88,6 +89,7 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<IOutboxRepository, EfOutboxRepository>();
         services.AddScoped<IUserRepository, EfUserRepository>();
         services.AddScoped<IDeviceTokenRepository, EfDeviceTokenRepository>();
+        services.AddScoped<IPromotionRepository, EfPromotionRepository>();
 
         services.AddScoped<EfProductRepository>();
         services.AddScoped<IProductRepository>(provider =>

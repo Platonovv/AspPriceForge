@@ -2,7 +2,7 @@
 
 namespace PriceForge.Domain.Pricing.Strategies;
 
-public sealed class PriceCalculator : IPricingStrategy
+public sealed class VolumeStrategy : IPricingStrategy
 {
     private const int VolumeThreshold = 100;
     private const decimal VolumeDiscount = 0.10m;

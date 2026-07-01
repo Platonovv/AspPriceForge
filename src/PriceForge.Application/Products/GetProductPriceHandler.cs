@@ -1,7 +1,10 @@
 ﻿using MediatR;
+using PriceForge.Application.Common.Exceptions;
+using PriceForge.Application.Promotions;
 using PriceForge.Domain.Common;
 using PriceForge.Domain.Pricing;
 using PriceForge.Domain.Products;
+using PriceForge.Domain.Promotions;
 
 namespace PriceForge.Application.Products;
 
@@ -9,9 +12,13 @@ public sealed class GetProductPriceHandler : IRequestHandler<GetProductPriceQuer
 {
     private readonly PriceCalculator _priceCalculator;
     private readonly IProductRepository _productRepository;
+    private readonly IPromotionRepository _promotionRepository;
 
-    public GetProductPriceHandler(IProductRepository productRepository, PriceCalculator priceCalculator)
+    public GetProductPriceHandler(IProductRepository productRepository,
+                                  IPromotionRepository promotionRepository,
+                                  PriceCalculator priceCalculator)
     {
+        _promotionRepository = promotionRepository;
         ArgumentNullException.ThrowIfNull(productRepository);
         ArgumentNullException.ThrowIfNull(priceCalculator);
 
@@ -25,12 +32,20 @@ public sealed class GetProductPriceHandler : IRequestHandler<GetProductPriceQuer
 
         if (product == null)
         {
-            throw new InvalidOperationException("Product not found");
+            throw new NotFoundException("Product not found");
         }
 
         var pricingContext = new PricingContext(product.BasePrice, request.Quantity, request.Tier, request.Region);
 
         Money money = _priceCalculator.Calculate(pricingContext);
+
+        Promotion? promotion
+            = await _promotionRepository.GetActiveForProductAsync(product.Id, DateTime.UtcNow, cancellationToken);
+
+        if (promotion != null)
+        {
+            money = _priceCalculator.CalculatePromotion(money, promotion);
+        }
 
         return new MoneyDto(money.Amount, money.Currency);
     }

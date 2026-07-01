@@ -1,7 +1,6 @@
 ﻿using PriceForge.Domain.Common;
 using PriceForge.Domain.Pricing;
 using PriceForge.Domain.Pricing.Strategies;
-using PriceCalculator = PriceForge.Domain.Pricing.Strategies.PriceCalculator;
 
 namespace PriceForge.UnitTests.CalculateTests;
 
@@ -19,8 +18,8 @@ public class PriceCalculatorTests
     [MemberData(nameof(PricingCases))]
     public void Calculate_AppliesStrategiesInChain(int quantity, CustomerTier tier, decimal expected, Region region)
     {
-        var strategies = new IPricingStrategy[] {new PriceCalculator(), new VipDiscountStrategy()};
-        var calculator = new Domain.Pricing.PriceCalculator(strategies);
+        var strategies = new IPricingStrategy[] {new VolumeStrategy(), new VipDiscountStrategy()};
+        var calculator = new PriceCalculator(strategies);
         var money = new Money(1000m, Currency.RUB);
         var pricingContext = new PricingContext(money, quantity, tier, region);
 
@@ -36,7 +35,7 @@ public class PriceCalculatorTests
     [InlineData(200, 900)]
     public void CalculatePrice_QuantityAtThreshold_Applies10PercentDiscount(int quantity, decimal expectedAmount)
     {
-        var strategy = new PriceCalculator();
+        var strategy = new VolumeStrategy();
         var money = new Money(1000, Currency.RUB);
         var pricingContext = new PricingContext(money, quantity, CustomerTier.Vip, Region.RU);
 

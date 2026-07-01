@@ -31,8 +31,6 @@ internal sealed class EfProductRepository : IProductRepository
     public Task<Product?> GetBySkuAsync(Sku sku, CancellationToken ct)
         => _dbContext.Products.Include(x => x.Components).AsNoTracking().FirstOrDefaultAsync(p => p.Sku == sku, ct);
 
-
-
     public Task<bool> ExistsAsync(Guid id, CancellationToken ct) => _dbContext.Products.AnyAsync(p => p.Id == id, ct);
 
     public async Task AddAsync(Product product, CancellationToken ct)

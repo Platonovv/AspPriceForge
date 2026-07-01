@@ -4,7 +4,6 @@ using PriceForge.Application.BackgroundServices;
 using PriceForge.Application.Behaviors;
 using PriceForge.Domain.Pricing;
 using PriceForge.Domain.Pricing.Strategies;
-using PriceCalculator = PriceForge.Domain.Pricing.Strategies.PriceCalculator;
 
 namespace PriceForge.Application;
 
@@ -27,8 +26,8 @@ public static class ApplicationDependencyInjection
         services.AddHostedService<OutboxDispatcher>();
 
         services.AddScoped<IPricingStrategy, VipDiscountStrategy>();
-        services.AddScoped<IPricingStrategy, PriceCalculator>();
-        services.AddScoped<Domain.Pricing.PriceCalculator>();
+        services.AddScoped<IPricingStrategy, VolumeStrategy>();
+        services.AddScoped<PriceCalculator>();
         return services;
     }
 }

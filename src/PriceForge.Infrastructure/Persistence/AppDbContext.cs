@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PriceForge.Application.Brokers;
 using PriceForge.Domain.Products;
+using PriceForge.Domain.Promotions;
 using PriceForge.Domain.Users;
 
 namespace PriceForge.Infrastructure.Persistence;
@@ -16,6 +17,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
 
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<Promotion> Promotions => Set<Promotion>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
