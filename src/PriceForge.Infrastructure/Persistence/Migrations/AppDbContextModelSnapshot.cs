@@ -116,6 +116,50 @@ namespace PriceForge.Infrastructure.Persistence.Migrations
                     b.ToTable("product_components", (string)null);
                 });
 
+            modelBuilder.Entity("PriceForge.Domain.PromoCodes.PromoCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("code");
+
+                    b.Property<decimal>("DiscountPercent")
+                        .HasColumnType("numeric")
+                        .HasColumnName("discount_percent");
+
+                    b.Property<decimal>("MinOrderAmount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("min_order_amount");
+
+                    b.Property<int>("UsedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("used_count");
+
+                    b.Property<int>("UsedLimit")
+                        .HasColumnType("integer")
+                        .HasColumnName("used_limit");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_from");
+
+                    b.Property<DateTime>("ValidTo")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_to");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("promo_codes", (string)null);
+                });
+
             modelBuilder.Entity("PriceForge.Domain.Promotions.Promotion", b =>
                 {
                     b.Property<Guid>("Id")

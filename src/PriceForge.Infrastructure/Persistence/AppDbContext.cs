@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PriceForge.Application.Brokers;
 using PriceForge.Domain.Products;
+using PriceForge.Domain.PromoCodes;
 using PriceForge.Domain.Promotions;
 using PriceForge.Domain.Users;
 
@@ -18,6 +19,7 @@ public sealed class AppDbContext : DbContext
 
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<Promotion> Promotions => Set<Promotion>();
+    public DbSet<PromoCode> PromoCodes => Set<PromoCode>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {

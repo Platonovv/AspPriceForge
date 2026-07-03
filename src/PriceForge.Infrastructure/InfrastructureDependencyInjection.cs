@@ -14,6 +14,7 @@ using PriceForge.Application.Common;
 using PriceForge.Application.DeviceTokens;
 using PriceForge.Application.Notifications;
 using PriceForge.Application.Products;
+using PriceForge.Application.PromoCodes;
 using PriceForge.Application.Promotions;
 using PriceForge.Infrastructure.Authentication;
 using PriceForge.Infrastructure.Notifications;
@@ -35,7 +36,14 @@ public static class InfrastructureDependencyInjection
             && !string.IsNullOrWhiteSpace(firebaseCredPath)
             && File.Exists(firebaseCredPath))
         {
-            FirebaseApp.Create(new AppOptions {Credential = GoogleCredential.FromFile(firebaseCredPath)});
+            try
+            {
+                FirebaseApp.Create(new AppOptions {Credential = GoogleCredential.FromFile(firebaseCredPath)});
+            }
+            catch (ArgumentException)
+            {
+                // FirebaseApp уже создан параллельным построением хоста (тесты идут параллельно) — гонка, игнорируем.
+            }
         }
 
         services.AddDbContext<AppDbContext>(options
@@ -90,6 +98,7 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<IUserRepository, EfUserRepository>();
         services.AddScoped<IDeviceTokenRepository, EfDeviceTokenRepository>();
         services.AddScoped<IPromotionRepository, EfPromotionRepository>();
+        services.AddScoped<IPromoCodeRepository, EfPromoCodeRepository>();
 
         services.AddScoped<EfProductRepository>();
         services.AddScoped<IProductRepository>(provider =>

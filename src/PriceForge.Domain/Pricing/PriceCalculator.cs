@@ -1,4 +1,5 @@
 ﻿using PriceForge.Domain.Common;
+using PriceForge.Domain.PromoCodes;
 using PriceForge.Domain.Promotions;
 
 namespace PriceForge.Domain.Pricing;
@@ -27,10 +28,16 @@ public sealed class PriceCalculator
 
     public Money CalculatePromotion(Money money, Promotion promotion)
     {
-        decimal amount = money.Amount * (1 - promotion.Percent / 100);
-        money = new Money(amount, money.Currency);
-        return money;
+        decimal amount = CalculatePercent(money.Amount, promotion.Percent);
+        return new Money(amount, money.Currency);
     }
 
+    public decimal CalculatePromoCode(decimal money, PromoCode promoCode)
+        => CalculatePercent(money, promoCode.DiscountPercent);
 
+    private static decimal CalculatePercent(decimal currentAmount, decimal discountPercent)
+    {
+        decimal amount = currentAmount * (1 - discountPercent / 100);
+        return amount;
+    }
 }
