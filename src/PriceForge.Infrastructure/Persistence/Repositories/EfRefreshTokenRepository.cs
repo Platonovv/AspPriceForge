@@ -20,6 +20,9 @@ internal sealed class EfRefreshTokenRepository : IRefreshTokenRepository
     public Task<RefreshToken?> GetByTokenAsync(string token, CancellationToken cancellationToken)
         => _dbContext.RefreshTokens.FirstOrDefaultAsync(x => x.Token == token, cancellationToken);
 
+    public Task<List<RefreshToken>> GetTokensByUserIdAsync(Guid userId, CancellationToken cancellationToken)
+        => _dbContext.RefreshTokens.Where(x => x.UserId == userId).ToListAsync(cancellationToken);
+
     public Task<int> DeleteExpiredAsync(DateTime threshold, CancellationToken cancellationToken)
         => _dbContext.RefreshTokens.Where(x => x.ExpiresAt < threshold).ExecuteDeleteAsync(cancellationToken);
 
