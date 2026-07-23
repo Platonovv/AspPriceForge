@@ -16,6 +16,7 @@ public sealed class ApplyPromoCodeHandler : IRequestHandler<ApplyPromoCodeComman
     {
         ArgumentNullException.ThrowIfNull(repository);
         ArgumentNullException.ThrowIfNull(priceCalculator);
+
         _priceCalculator = priceCalculator;
         _repository = repository;
     }

@@ -2,6 +2,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using PriceForge.Application.BackgroundServices;
 using PriceForge.Application.Behaviors;
+using PriceForge.Application.Cache;
+using PriceForge.Application.Caching;
 using PriceForge.Domain.Pricing;
 using PriceForge.Domain.Pricing.Strategies;
 
@@ -28,6 +30,8 @@ public static class ApplicationDependencyInjection
         services.AddScoped<IPricingStrategy, VipDiscountStrategy>();
         services.AddScoped<IPricingStrategy, VolumeStrategy>();
         services.AddScoped<PriceCalculator>();
+        services.AddScoped<ICacheVersion, CacheVersion>();
+
         return services;
     }
 }

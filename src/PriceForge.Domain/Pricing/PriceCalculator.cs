@@ -1,4 +1,5 @@
-﻿using PriceForge.Domain.Common;
+﻿using PriceForge.Domain.Categories;
+using PriceForge.Domain.Common;
 using PriceForge.Domain.PromoCodes;
 using PriceForge.Domain.Promotions;
 
@@ -26,16 +27,33 @@ public sealed class PriceCalculator
         return calculatePrice;
     }
 
-    public Money CalculatePromotion(Money money, Promotion promotion)
+    public Money CalculatePromotion(Money money,
+                                    Promotion? promotion,
+                                    IReadOnlyCollection<CategoryPromotion> categories,
+                                    DateTime at)
     {
-        decimal amount = CalculatePercent(money.Amount, promotion.Percent);
-        return new Money(amount, money.Currency);
+        if (promotion != null && promotion.IsActiveAt(at))
+        {
+            decimal amount = CalculatePercent(money.Amount, promotion.Percent);
+            return new Money(amount, money.Currency);
+        }
+
+        var activeCategories = categories.Where(c => c.IsActiveAt(at)).ToList();
+
+        if (activeCategories.Count > 0)
+        {
+            decimal maxPromotionPercent = activeCategories.Max(c => c.Percent);
+            decimal amount = CalculatePercent(money.Amount, maxPromotionPercent);
+            return new Money(amount, money.Currency);
+        }
+
+        return money;
     }
 
     public decimal CalculatePromoCode(decimal money, PromoCode promoCode)
         => CalculatePercent(money, promoCode.DiscountPercent);
 
-    private static decimal CalculatePercent(decimal currentAmount, decimal discountPercent)
+    private decimal CalculatePercent(decimal currentAmount, decimal discountPercent)
     {
         decimal amount = currentAmount * (1 - discountPercent / 100);
         return amount;

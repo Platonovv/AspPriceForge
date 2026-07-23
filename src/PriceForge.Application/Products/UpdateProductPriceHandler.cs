@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using MediatR;
 using PriceForge.Application.Brokers;
+using PriceForge.Application.Cache;
 using PriceForge.Application.Common.Exceptions;
 using PriceForge.Domain.Common;
 using PriceForge.Domain.Products;
@@ -11,12 +12,17 @@ public sealed class UpdateProductPriceHandler : IRequestHandler<UpdateProductPri
 {
     private readonly IProductRepository _productRepository;
     private readonly IOutboxRepository _outboxRepository;
+    private readonly ICacheVersion _cacheVersion;
 
-    public UpdateProductPriceHandler(IProductRepository productRepository, IOutboxRepository outboxRepository)
+    public UpdateProductPriceHandler(ICacheVersion cacheVersion,
+                                     IProductRepository productRepository,
+                                     IOutboxRepository outboxRepository)
     {
+        ArgumentNullException.ThrowIfNull(cacheVersion);
         ArgumentNullException.ThrowIfNull(productRepository);
         ArgumentNullException.ThrowIfNull(outboxRepository);
 
+        _cacheVersion = cacheVersion;
         _outboxRepository = outboxRepository;
         _productRepository = productRepository;
     }
@@ -45,5 +51,6 @@ public sealed class UpdateProductPriceHandler : IRequestHandler<UpdateProductPri
 
         await _outboxRepository.AddAsync(message, cancellationToken);
         await _productRepository.SaveChangesAsync(cancellationToken);
+        await _cacheVersion.BumpAsync(cancellationToken);
     }
 }

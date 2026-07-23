@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using PriceForge.Domain.Categories;
 using PriceForge.Domain.Common;
 using PriceForge.Domain.Pricing;
 using PriceForge.Domain.Pricing.Strategies;
@@ -49,7 +50,11 @@ public class PromotionPersistenceTest : IClassFixture<PostgresFixture>
         // Assert
         Assert.NotNull(promotionloaded);
 
-        Money promotionMoney = calculator.CalculatePromotion(loaded!.BasePrice, promotionloaded);
+        Money promotionMoney
+            = calculator.CalculatePromotion(loaded!.BasePrice,
+                                            promotionloaded,
+                                            new List<CategoryPromotion>(),
+                                            DateTime.UtcNow);
 
         // Assert
         Assert.Equal(750m, promotionMoney.Amount);

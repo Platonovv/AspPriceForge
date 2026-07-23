@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -22,6 +21,8 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     private Respawner _respawner = null!;
     private NpgsqlConnection _connection = null!;
+
+    protected virtual bool UseTestAuth => true;
 
     public string ConnectionString => _container.GetConnectionString();
 
@@ -47,11 +48,15 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             services.RemoveAll<DbContextOptions<AppDbContext>>();
             services.AddDbContext<AppDbContext>(options => options.UseNpgsql(ConnectionString));
 
-            services.AddAuthentication("Test")
-                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test",
-                                                                             _ =>
-                                                                             {
-                                                                             });
+            if (UseTestAuth)
+            {
+                services.AddAuthentication("Test")
+                        .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test",
+                            _ =>
+                            {
+                            });
+            }
+
             services.RemoveAll<IHostedService>();
             services.RemoveAll<IDistributedCache>();
             services.AddDistributedMemoryCache();

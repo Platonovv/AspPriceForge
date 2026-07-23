@@ -1,0 +1,15 @@
+﻿using PriceForge.Domain.Categories;
+
+namespace PriceForge.Application.Categories;
+
+public interface ICategoryPromotionRepository
+{
+    Task AddAsync(CategoryPromotion categoryPromotion, CancellationToken ct);
+
+    Task<List<CategoryPromotion>> GetActiveCategoryPromotionsByProductAsync(Guid productId,
+                                                                            DateTime currentTime,
+                                                                            CancellationToken ct);
+
+    Task<int> SaveChangesAsync(CancellationToken ct);
+    Task<bool> HasOverlappingAsync(Guid categoryId, DateTime startAt, DateTime endAt, CancellationToken ct);
+}

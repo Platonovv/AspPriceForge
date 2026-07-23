@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PriceForge.Application.Brokers;
+using PriceForge.Domain.Categories;
 using PriceForge.Domain.Products;
 using PriceForge.Domain.PromoCodes;
 using PriceForge.Domain.Promotions;
@@ -10,15 +11,15 @@ namespace PriceForge.Infrastructure.Persistence;
 public sealed class AppDbContext : DbContext
 {
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<Category> Categories => Set<Category>();
+    public DbSet<ProductCategory> ProductCategories => Set<ProductCategory>();
     public DbSet<ProductClosure> ProductClosures => Set<ProductClosure>();
-
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
-
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
-
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<Promotion> Promotions => Set<Promotion>();
+    public DbSet<CategoryPromotion> CategoryPromotions => Set<CategoryPromotion>();
     public DbSet<PromoCode> PromoCodes => Set<PromoCode>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
@@ -43,6 +44,7 @@ public sealed class AppDbContext : DbContext
                                     .Where(e => e.State == EntityState.Added)
                                     .Select(e => new {e.Entity.ParentId, e.Entity.ChildId})
                                     .ToList();
+
         //3
         foreach (Guid pid in newProductIds)
         {

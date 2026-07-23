@@ -1,6 +1,8 @@
 ﻿using MediatR;
+using PriceForge.Application.Categories;
 using PriceForge.Application.Common.Exceptions;
 using PriceForge.Application.Promotions;
+using PriceForge.Domain.Categories;
 using PriceForge.Domain.Common;
 using PriceForge.Domain.Pricing;
 using PriceForge.Domain.Products;
@@ -13,17 +15,22 @@ public sealed class GetProductPriceHandler : IRequestHandler<GetProductPriceQuer
     private readonly PriceCalculator _priceCalculator;
     private readonly IProductRepository _productRepository;
     private readonly IPromotionRepository _promotionRepository;
+    private readonly ICategoryPromotionRepository _categoryPromotionRepository;
 
     public GetProductPriceHandler(IProductRepository productRepository,
                                   IPromotionRepository promotionRepository,
+                                  ICategoryPromotionRepository categoryPromotionRepository,
                                   PriceCalculator priceCalculator)
     {
-        _promotionRepository = promotionRepository;
         ArgumentNullException.ThrowIfNull(productRepository);
         ArgumentNullException.ThrowIfNull(priceCalculator);
+        ArgumentNullException.ThrowIfNull(promotionRepository);
+        ArgumentNullException.ThrowIfNull(categoryPromotionRepository);
 
         _priceCalculator = priceCalculator;
         _productRepository = productRepository;
+        _promotionRepository = promotionRepository;
+        _categoryPromotionRepository = categoryPromotionRepository;
     }
 
     public async Task<MoneyDto> Handle(GetProductPriceQuery request, CancellationToken cancellationToken)
@@ -39,13 +46,18 @@ public sealed class GetProductPriceHandler : IRequestHandler<GetProductPriceQuer
 
         Money money = _priceCalculator.Calculate(pricingContext);
 
-        Promotion? promotion
-            = await _promotionRepository.GetActiveForProductAsync(product.Id, DateTime.UtcNow, cancellationToken);
+        DateTime currentTime = DateTime.UtcNow;
 
-        if (promotion != null)
-        {
-            money = _priceCalculator.CalculatePromotion(money, promotion);
-        }
+        Promotion? promotion
+            = await _promotionRepository.GetActiveForProductAsync(product.Id, currentTime, cancellationToken);
+
+        IReadOnlyCollection<CategoryPromotion> categoryPromotions
+            = await _categoryPromotionRepository.GetActiveCategoryPromotionsByProductAsync(
+                  product.Id,
+                  currentTime,
+                  cancellationToken);
+
+        money = _priceCalculator.CalculatePromotion(money, promotion, categoryPromotions, currentTime);
 
         return new MoneyDto(money.Amount, money.Currency);
     }

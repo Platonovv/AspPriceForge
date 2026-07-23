@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PriceForge.Application.Products;
+using PriceForge.Domain.Categories;
 using PriceForge.Domain.Common;
 using PriceForge.Domain.Products;
 using PriceForge.Domain.Promotions;
@@ -88,5 +89,89 @@ public class WebPromotionIntegrationTests : IClassFixture<ApiFactory>
         Assert.True(promotionloaded.IsActiveAt(DateTime.UtcNow.AddHours(1)));
         Assert.False(promotionloaded.IsActiveAt(DateTime.UtcNow.AddHours(3)));
         Assert.False(promotionloaded.IsActiveAt(DateTime.UtcNow.AddHours(-1)));
+    }
+
+    [Fact]
+    public async Task Create_AsAdmin_Returns201_AndPersistsPromotionCategories()
+    {
+        await _factory.ResetAsync();
+
+        // маркер для тестовой auth-схемы (→ Admin) + ключ идемпотентности (требует IdempotencyFilter)
+        _client.DefaultRequestHeaders.Add(TestAuthHandler.AuthHeader, "true");
+        _client.DefaultRequestHeaders.Add("Idempotency-Key", Guid.NewGuid().ToString());
+
+        var command = new {Sku = "E2E-1", Name = "E2E Product", Price = 1000m, Currency = "RUB"};
+
+        // Act — реальный HTTP через весь пайплайн (auth → controller → MediatR → repo → БД)
+        HttpResponseMessage response = await _client.PostAsJsonAsync("/api/v1/products", command);
+        // Assert — статус
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        // id из тела ответа
+        Guid id = await response.Content.ReadFromJsonAsync<Guid>();
+        // Assert — продукт реально лёг в Postgres (проверяем напрямую в БД, не через HTTP)
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Product? persisted = await db.Products.FirstOrDefaultAsync(p => p.Id == id);
+        // Assert - на то что продукт валиден
+        Assert.NotNull(persisted);
+        Assert.Equal(1000m, persisted.BasePrice.Amount);
+        Assert.Equal(Currency.RUB, persisted.BasePrice.Currency);
+
+        // Act — реальный HTTP через весь пайплайн (auth → controller → MediatR → repo → БД)
+        HttpResponseMessage productPriceResponse
+            = await _client.GetAsync($"/api/v1/products/{id}/price?quantity=1&tier=Regular&region=Ru");
+        productPriceResponse.EnsureSuccessStatusCode();
+        MoneyDto? productMoney
+            = await productPriceResponse.Content.ReadFromJsonAsync<MoneyDto>(); // System.Net.Http.Json
+        Assert.Equal(1000m, productMoney!.Amount);                              // база 1000m
+
+        var createCategoryCommand = new {Name = "Электроника"};
+        // Act — реальный HTTP через весь пайплайн (auth → controller → MediatR → repo → БД)
+        HttpResponseMessage promotionCreateCategoryResponse
+            = await _client.PostAsJsonAsync("api/v1/categories", createCategoryCommand);
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, promotionCreateCategoryResponse.StatusCode);
+        Guid categoryId = await promotionCreateCategoryResponse.Content.ReadFromJsonAsync<Guid>();
+        // Assert — createCategory реально лёг в Postgres (проверяем напрямую в БД, не через HTTP)
+        AppDbContext createCategoryDb = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Category? category = await createCategoryDb.Categories.FirstOrDefaultAsync(p => p.Id == categoryId);
+        // Assert
+        Assert.NotNull(category);
+
+        var assignCategoryRequest = new {CategoryId = category.Id,};
+        // Act — реальный HTTP через весь пайплайн (auth → controller → MediatR → repo → БД)
+        HttpResponseMessage assignCategoryRequestResponse
+            = await _client.PostAsJsonAsync($"api/v1/products/{id}/categories", assignCategoryRequest);
+        Assert.Equal(HttpStatusCode.NoContent, assignCategoryRequestResponse.StatusCode);
+        AppDbContext assignCategoryDb = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        ProductCategory? productCategory
+            = await assignCategoryDb.ProductCategories.FirstOrDefaultAsync(p => p.ProductId == id);
+        // Assert
+        Assert.NotNull(productCategory);
+
+        var createCategoryPromotionRequest = new
+        {
+            Percent = 30, StartAt = DateTime.UtcNow, EndAt = DateTime.UtcNow.AddHours(1)
+        };
+        // Act — реальный HTTP через весь пайплайн (auth → controller → MediatR → repo → БД)
+        HttpResponseMessage createCategoryPromotionResponse
+            = await _client.PostAsJsonAsync($"api/v1/categories/{category.Id}/promotions",
+                                            createCategoryPromotionRequest);
+        Assert.Equal(HttpStatusCode.Created, createCategoryPromotionResponse.StatusCode);
+        AppDbContext createCategoryPromotion = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        CategoryPromotion? categoryPromotion
+            = await createCategoryPromotion.CategoryPromotions.FirstOrDefaultAsync(p => p.CategoryId == categoryId);
+        // Assert
+        Assert.NotNull(categoryPromotion);
+
+        // Act — реальный HTTP через весь пайплайн (auth → controller → MediatR → repo → БД)
+        HttpResponseMessage resp
+            = await _client.GetAsync($"/api/v1/products/{id}/price?quantity=1&tier=Regular&region=Ru");
+        resp.EnsureSuccessStatusCode();
+        MoneyDto? money = await resp.Content.ReadFromJsonAsync<MoneyDto>(); // System.Net.Http.Json
+        Assert.Equal(700m, money!.Amount);                                  // база 1000m − промо 30%
+
+        // Assert
+        Assert.Equal(30m, categoryPromotion.Percent);
     }
 }

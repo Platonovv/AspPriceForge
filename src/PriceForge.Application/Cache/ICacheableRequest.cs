@@ -1,4 +1,4 @@
-﻿namespace PriceForge.Application.Products;
+﻿namespace PriceForge.Application.Cache;
 
 public interface ICacheableRequest
 {

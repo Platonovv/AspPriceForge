@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using PriceForge.Application.Cache;
 using PriceForge.Domain.Pricing;
 
 namespace PriceForge.Application.Products;

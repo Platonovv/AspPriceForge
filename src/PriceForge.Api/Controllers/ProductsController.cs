@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using PriceForge.Api.Contracts.Products;
 using PriceForge.Api.Filters;
 using PriceForge.Api.Hubs;
 using PriceForge.Application.Products;
@@ -32,6 +33,17 @@ public class ProductsController : ControllerBase
         return Created($"/api/v1/products/{id}", id);
     }
 
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("{productId}/categories")]
+    public async Task<IActionResult> AssignCategory(Guid productId,
+                                                    [FromBody] AssignCategoryRequest request,
+                                                    CancellationToken ct)
+    {
+        var command = new AssignProductToCategoryCommand(productId, request.CategoryId);
+        await _sender.Send(command, ct);
+        return NoContent();
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
@@ -59,10 +71,10 @@ public class ProductsController : ControllerBase
 
     [HttpPut("{id}/price")]
     public async Task<IActionResult> UpdateProductPrice(Guid id,
-                                                        [FromBody] UpdateProductPriceCommand command,
+                                                        [FromBody] UpdateProductPriceRequest request,
                                                         CancellationToken ct)
     {
-        command = command with {Id = id};
+        var command = new UpdateProductPriceCommand(id, request.NewPrice, request.Currency);
 
         await _sender.Send(command, ct);
         await _hubContext.Clients.All.SendAsync("PriceChanged",

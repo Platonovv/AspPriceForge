@@ -1,6 +1,7 @@
 ﻿using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,7 @@ using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using PriceForge.Application.Authentication;
 using PriceForge.Application.Brokers;
+using PriceForge.Application.Categories;
 using PriceForge.Application.Common;
 using PriceForge.Application.DeviceTokens;
 using PriceForge.Application.Notifications;
@@ -100,13 +102,10 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<IPromotionRepository, EfPromotionRepository>();
         services.AddScoped<IPromoCodeRepository, EfPromoCodeRepository>();
 
-        services.AddScoped<EfProductRepository>();
-        services.AddScoped<IProductRepository>(provider =>
-        {
-            EfProductRepository inner = provider.GetRequiredService<EfProductRepository>();
-            IMemoryCache cache = provider.GetRequiredService<IMemoryCache>();
-            return new CachedProductRepository(inner, cache);
-        });
+        services.AddScoped<IProductRepository, EfProductRepository>();
+
+        services.AddScoped<ICategoryRepository, EfCategoryRepository>();
+        services.AddScoped<ICategoryPromotionRepository, EfCategoryPromotionRepository>();
 
         return services;
     }

@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using PriceForge.Application.Cache;
 using PriceForge.Application.Common.Exceptions;
 using PriceForge.Application.Products;
 using PriceForge.Domain.Products;
@@ -10,12 +11,17 @@ public class CreatePromotionHandler : IRequestHandler<CreatePromotionCommand, Gu
 {
     private readonly IPromotionRepository _promotionRepository;
     private readonly IProductRepository _productRepository;
+    private readonly ICacheVersion _cacheVersion;
 
-    public CreatePromotionHandler(IPromotionRepository promotionRepository, IProductRepository productRepository)
+    public CreatePromotionHandler(ICacheVersion cacheVersion,
+                                  IPromotionRepository promotionRepository,
+                                  IProductRepository productRepository)
     {
+        ArgumentNullException.ThrowIfNull(cacheVersion);
         ArgumentNullException.ThrowIfNull(promotionRepository);
         ArgumentNullException.ThrowIfNull(productRepository);
 
+        _cacheVersion = cacheVersion;
         _productRepository = productRepository;
         _promotionRepository = promotionRepository;
     }
@@ -41,6 +47,7 @@ public class CreatePromotionHandler : IRequestHandler<CreatePromotionCommand, Gu
 
         await _promotionRepository.AddAsync(newPromotion, cancellationToken);
         await _promotionRepository.SaveChangesAsync(cancellationToken);
+        await _cacheVersion.BumpAsync(cancellationToken);
 
         return newPromotion.Id;
     }

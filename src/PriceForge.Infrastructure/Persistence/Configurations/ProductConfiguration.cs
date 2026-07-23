@@ -14,7 +14,6 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         // 2. Колонки
         builder.Property(p => p.Id).HasColumnName("id");
-
         builder.Property(p => p.Name).HasColumnName("name").HasMaxLength(200).IsRequired();
 
         // 3. Sku через ValueConverter
@@ -57,7 +56,5 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         // EF должен писать в backing field _components, а не через свойство
         builder.Metadata.FindNavigation(nameof(Product.Components))!.SetPropertyAccessMode(PropertyAccessMode.Field);
-
-
     }
 }
