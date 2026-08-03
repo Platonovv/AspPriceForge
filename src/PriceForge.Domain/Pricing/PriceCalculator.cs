@@ -29,13 +29,18 @@ public sealed class PriceCalculator
 
     public Money CalculatePromotion(Money money,
                                     Promotion? promotion,
-                                    IReadOnlyCollection<CategoryPromotion> categories,
+                                    IReadOnlyCollection<CategoryPromotion>? categories,
                                     DateTime at)
     {
         if (promotion != null && promotion.IsActiveAt(at))
         {
             decimal amount = CalculatePercent(money.Amount, promotion.Percent);
             return new Money(amount, money.Currency);
+        }
+
+        if (categories == null)
+        {
+            return money;
         }
 
         var activeCategories = categories.Where(c => c.IsActiveAt(at)).ToList();

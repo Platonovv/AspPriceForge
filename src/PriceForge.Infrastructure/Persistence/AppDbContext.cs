@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PriceForge.Application.Brokers;
 using PriceForge.Domain.Categories;
+using PriceForge.Domain.Orders;
 using PriceForge.Domain.Products;
 using PriceForge.Domain.PromoCodes;
 using PriceForge.Domain.Promotions;
@@ -21,6 +22,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<Promotion> Promotions => Set<Promotion>();
     public DbSet<CategoryPromotion> CategoryPromotions => Set<CategoryPromotion>();
     public DbSet<PromoCode> PromoCodes => Set<PromoCode>();
+    public DbSet<Order> Orders => Set<Order>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {

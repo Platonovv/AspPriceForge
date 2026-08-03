@@ -11,13 +11,16 @@ using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using PriceForge.Application.Authentication;
 using PriceForge.Application.Brokers;
+using PriceForge.Application.Carts;
 using PriceForge.Application.Categories;
 using PriceForge.Application.Common;
 using PriceForge.Application.DeviceTokens;
 using PriceForge.Application.Notifications;
+using PriceForge.Application.Orders;
 using PriceForge.Application.Products;
 using PriceForge.Application.PromoCodes;
 using PriceForge.Application.Promotions;
+using PriceForge.Application.Transactions;
 using PriceForge.Infrastructure.Authentication;
 using PriceForge.Infrastructure.Notifications;
 using PriceForge.Infrastructure.Persistence;
@@ -25,7 +28,9 @@ using PriceForge.Infrastructure.Persistence.Brokers;
 using PriceForge.Infrastructure.Persistence.Factory;
 using PriceForge.Infrastructure.Persistence.Queries;
 using PriceForge.Infrastructure.Persistence.Repositories;
+using PriceForge.Infrastructure.Transactions;
 using RabbitMQ.Client;
+using StackExchange.Redis;
 
 namespace PriceForge.Infrastructure;
 
@@ -50,9 +55,11 @@ public static class InfrastructureDependencyInjection
 
         services.AddDbContext<AppDbContext>(options
                                                 => options.UseNpgsql(configuration.GetConnectionString("Postgres")!));
-        services.AddMemoryCache();
-        services.AddStackExchangeRedisCache(options => options.Configuration
-                                                           = configuration.GetConnectionString("Redis")!);
+
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = configuration.GetConnectionString("Redis")!;
+        });
 
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
         services.Configure<SmtpSettings>(configuration.GetSection("Smtp"));
@@ -62,6 +69,12 @@ public static class InfrastructureDependencyInjection
             string rabbitUri = configuration.GetConnectionString("RabbitMq")!;
             var connectionFactory = new ConnectionFactory {Uri = new Uri(rabbitUri)};
             return connectionFactory.CreateConnectionAsync().GetAwaiter().GetResult();
+        });
+
+        services.AddSingleton<IConnectionMultiplexer>(_ =>
+        {
+            string redisConnectionString = configuration.GetConnectionString("Redis")!;
+            return ConnectionMultiplexer.Connect(redisConnectionString);
         });
 
         try
@@ -79,8 +92,8 @@ public static class InfrastructureDependencyInjection
         });
 
         services.AddSingleton<IProductEventStore, MongoEventStore>();
-
         services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
+
         services.AddScoped<IDapperQuery, DapperQuery>();
 
         services.AddScoped<IIntegrationEventHandler, ProductCreatedEventHandler>();
@@ -106,6 +119,11 @@ public static class InfrastructureDependencyInjection
 
         services.AddScoped<ICategoryRepository, EfCategoryRepository>();
         services.AddScoped<ICategoryPromotionRepository, EfCategoryPromotionRepository>();
+
+        services.AddScoped<ICartRepository, RedisCartRepository>();
+        services.AddScoped<IOrderRepository, EfOrderRepository>();
+
+        services.AddScoped<ITransactionRunner, TransactionRunner>();
 
         return services;
     }

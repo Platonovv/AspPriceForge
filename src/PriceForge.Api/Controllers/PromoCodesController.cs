@@ -1,7 +1,9 @@
-﻿using MediatR;
+﻿using System.Security.Claims;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PriceForge.Application.PromoCodes;
+using PriceForge.Domain.Pricing;
 
 namespace PriceForge.Api.Controllers;
 
@@ -26,11 +28,11 @@ public class PromoCodesController : ControllerBase
         return Created($"/api/v1/promocodes/{id}", id);
     }
 
-    [HttpPost("apply")]
-    public async Task<IActionResult> ApplyPromoCode([FromBody] ApplyPromoCodeCommand applyPromoCodeCommand,
-                                                    CancellationToken ct)
+    [HttpGet("quote")]
+    public async Task<IActionResult> QuotePromoCode(string code, CustomerTier tier, Region region, CancellationToken ct)
     {
-        decimal price = await _sender.Send(applyPromoCodeCommand, ct);
+        var userId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        QuotePromoCodeDto price = await _sender.Send(new QuotePromoCodeQuery(userId, code, tier, region), ct);
         return Ok(price);
     }
 }

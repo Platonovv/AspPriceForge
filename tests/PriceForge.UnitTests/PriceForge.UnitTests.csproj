@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="xunit" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+    <PackageReference Include="xunit"/>
     <PackageReference Include="xunit.runner.visualstudio">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -23,7 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\PriceForge.Domain\PriceForge.Domain.csproj" />
+    <ProjectReference Include="..\..\src\PriceForge.Domain\PriceForge.Domain.csproj"/>
+    <ProjectReference Include="..\..\src\PriceForge.Infrastructure\PriceForge.Infrastructure.csproj"/>
   </ItemGroup>
 
 </Project>

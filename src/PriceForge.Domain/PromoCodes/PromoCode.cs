@@ -84,12 +84,32 @@ public sealed class PromoCode
         MinOrderAmount = minOrderAmount;
     }
 
-    public bool IsValid(decimal orderAmount, DateTime now)
+    public (bool Valid, PromoCodeReason Reason) IsValid(decimal orderAmount, DateTime now)
     {
+        PromoCodeReason reason = PromoCodeReason.None;
+
         bool isTimeValid = now >= ValidFrom && now <= ValidTo;
+
+        if (!isTimeValid)
+        {
+            reason = PromoCodeReason.IsTimeNotValid;
+        }
+
         bool isOrderValid = orderAmount >= MinOrderAmount;
+
+        if (!isOrderValid)
+        {
+            reason = PromoCodeReason.IsOrderNotValid;
+        }
+
         bool isUsedCountValid = UsedCount < UsedLimit;
-        return isTimeValid && isOrderValid && isUsedCountValid;
+
+        if (!isUsedCountValid)
+        {
+            reason = PromoCodeReason.IsUsedCountNotValid;
+        }
+
+        return (isTimeValid && isOrderValid && isUsedCountValid, reason);
     }
 
     public void IncrementUsage()

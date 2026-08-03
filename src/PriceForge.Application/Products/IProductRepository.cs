@@ -9,6 +9,8 @@ public interface IProductRepository
     Task<Product?> GetByIdForUpdateAsync(Guid id, CancellationToken ct);
     Task<Product?> GetBySkuAsync(Sku sku, CancellationToken ct);
 
+    Task<List<Product>> GetByIdsAsync(List<Guid> ids, CancellationToken ct);
+
     Task<bool> ExistsAsync(Guid id, CancellationToken ct);
 
     // Запись

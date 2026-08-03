@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using PriceForge.Application.Carts;
 using PriceForge.Application.Categories;
 using PriceForge.Domain.Categories;
 
@@ -26,6 +27,19 @@ public class EfCategoryPromotionRepository : ICategoryPromotionRepository
                                  categoryPromotion => categoryPromotion.CategoryId,
                                  (category, promotion) => promotion)
                            .Where(x => x.StartAt <= at && at <= x.EndAt)
+                           .AsNoTracking()
+                           .ToListAsync(ct);
+
+    public async Task<List<ProductCategoryPromotion>>
+        GetActiveForProductsAsync(List<Guid> ids, DateTime at, CancellationToken ct)
+        => await _dbContext.ProductCategories
+                           .Where(pc => ids.Contains(pc.ProductId))
+                           .Join(_dbContext.CategoryPromotions,
+                                 pc => pc.CategoryId,
+                                 cp => cp.CategoryId,
+                                 (pc, cp) => new {pc.ProductId, cp})
+                           .Where(x => x.cp.StartAt <= at && at <= x.cp.EndAt)
+                           .Select(x => new ProductCategoryPromotion(x.ProductId, x.cp))
                            .AsNoTracking()
                            .ToListAsync(ct);
 

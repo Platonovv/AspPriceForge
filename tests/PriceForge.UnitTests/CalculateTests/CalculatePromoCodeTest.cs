@@ -1,5 +1,4 @@
 using PriceForge.Domain.Pricing;
-using PriceForge.Domain.Pricing.Strategies;
 using PriceForge.Domain.PromoCodes;
 
 namespace PriceForge.UnitTests.CalculateTests;
@@ -27,21 +26,21 @@ public class CalculatePromoCodeTest
     public void IsValid_WithinWindowUnderLimitAboveMin_True()
     {
         PromoCode code = Make(25m, 100m, 10, DateTime.UtcNow.AddHours(-1), DateTime.UtcNow.AddHours(1));
-        Assert.True(code.IsValid(1000m, DateTime.UtcNow));
+        Assert.True(code.IsValid(1000m, DateTime.UtcNow).Valid);
     }
 
     [Fact]
     public void IsValid_Expired_False()
     {
         PromoCode code = Make(25m, 100m, 10, DateTime.UtcNow.AddHours(-2), DateTime.UtcNow.AddHours(-1));
-        Assert.False(code.IsValid(1000m, DateTime.UtcNow));
+        Assert.False(code.IsValid(1000m, DateTime.UtcNow).Valid);
     }
 
     [Fact]
     public void IsValid_BelowMinOrder_False()
     {
         PromoCode code = Make(25m, 500m, 10, DateTime.UtcNow.AddHours(-1), DateTime.UtcNow.AddHours(1));
-        Assert.False(code.IsValid(100m, DateTime.UtcNow));
+        Assert.False(code.IsValid(100m, DateTime.UtcNow).Valid);
     }
 
     [Fact]
@@ -49,6 +48,6 @@ public class CalculatePromoCodeTest
     {
         PromoCode code = Make(25m, 0m, 1, DateTime.UtcNow.AddHours(-1), DateTime.UtcNow.AddHours(1));
         code.IncrementUsage(); // UsedCount 0 -> 1, UsedLimit 1 => не < лимита
-        Assert.False(code.IsValid(1000m, DateTime.UtcNow));
+        Assert.False(code.IsValid(1000m, DateTime.UtcNow).Valid);
     }
 }

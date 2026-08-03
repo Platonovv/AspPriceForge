@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using PriceForge.Application.PromoCodes;
+using PriceForge.Domain.PromoCodes;
 using PriceForge.IntegrationTests.Factory;
 using PriceForge.IntegrationTests.WebAuthTests;
 
@@ -15,33 +17,118 @@ public class WebPromoCodeIntegrationTests : IClassFixture<ApiFactory>
     {
         _factory = factory;
         _client = factory.CreateClient();
+        _client.DefaultRequestHeaders.Add(TestAuthHandler.AuthHeader, "true");
+    }
+
+    private async Task<Guid> RegisterAndImpersonateAsync(string email)
+    {
+        HttpResponseMessage register
+            = await _client.PostAsJsonAsync("/api/v1/auth/register", new {Email = email, Password = "Passw0rd!"});
+        register.EnsureSuccessStatusCode();
+
+        Guid userId = await register.Content.ReadFromJsonAsync<Guid>();
+
+        _client.DefaultRequestHeaders.Remove(TestAuthHandler.UserIdHeader);
+        _client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, userId.ToString());
+
+        return userId;
+    }
+
+    private async Task<Guid> CreateProductAsync(string sku, decimal price)
+    {
+        _client.DefaultRequestHeaders.Remove("Idempotency-Key");
+        _client.DefaultRequestHeaders.Add("Idempotency-Key", Guid.NewGuid().ToString());
+
+        HttpResponseMessage response = await _client.PostAsJsonAsync("/api/v1/products",
+                                                                     new
+                                                                     {
+                                                                         Sku = sku,
+                                                                         Name = $"Product {sku}",
+                                                                         Price = price,
+                                                                         Currency = "RUB"
+                                                                     });
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<Guid>();
+    }
+
+    private async Task CreatePromoCodeAsync(string code, decimal percent, decimal minOrderAmount)
+    {
+        HttpResponseMessage response = await _client.PostAsJsonAsync("/api/v1/promocodes",
+                                                                     new
+                                                                     {
+                                                                         Code = code,
+                                                                         DiscountPercent = percent,
+                                                                         ValidFrom = DateTime.UtcNow.AddHours(-1),
+                                                                         ValidTo = DateTime.UtcNow.AddHours(1),
+                                                                         UsedLimit = 10,
+                                                                         MinOrderAmount = minOrderAmount
+                                                                     });
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
     [Fact]
-    public async Task CreateThenApply_ReturnsDiscountedAmount()
+    public async Task Quote_ValidCode_ReturnsDiscountedTotal()
     {
         await _factory.ResetAsync();
-        _client.DefaultRequestHeaders.Add(TestAuthHandler.AuthHeader, "true"); // → Admin
 
+        await RegisterAndImpersonateAsync("quote-valid@priceforge.test");
+        Guid productId = await CreateProductAsync("QUOTE-1", 1000m);
+        await CreatePromoCodeAsync("SALE25", 25m, 100m);
 
-        var create = new
-        {
-            Code = "SALE25",
-            DiscountPercent = 25m,
-            ValidFrom = DateTime.UtcNow.AddHours(-1),
-            ValidTo = DateTime.UtcNow.AddHours(1),
-            UsedLimit = 10,
-            MinOrderAmount = 100m
-        };
-        HttpResponseMessage createResp = await _client.PostAsJsonAsync("/api/v1/promocodes", create);
-        Assert.Equal(HttpStatusCode.Created, createResp.StatusCode);
+        await _client.PostAsJsonAsync("/api/v1/cart/items", new {ProductId = productId, Quantity = 1});
 
+        HttpResponseMessage response
+            = await _client.GetAsync("/api/v1/promocodes/quote?code=SALE25&tier=Regular&region=Ru");
+        response.EnsureSuccessStatusCode();
 
-        var apply = new { Code = "SALE25", OrderMoney = 1000m };
-        HttpResponseMessage applyResp = await _client.PostAsJsonAsync("/api/v1/promocodes/apply", apply);
-        applyResp.EnsureSuccessStatusCode();
+        QuotePromoCodeDto? quote = await response.Content.ReadFromJsonAsync<QuotePromoCodeDto>();
 
-        decimal discounted = await applyResp.Content.ReadFromJsonAsync<decimal>();
-        Assert.Equal(750m, discounted);
+        Assert.NotNull(quote);
+        Assert.Equal(750m, quote.TotalPrice);
+    }
+
+    [Fact]
+    public async Task Quote_UnknownCode_ReturnsCartTotalWithReason()
+    {
+        await _factory.ResetAsync();
+
+        await RegisterAndImpersonateAsync("quote-unknown@priceforge.test");
+        Guid productId = await CreateProductAsync("QUOTE-2", 1000m);
+
+        await _client.PostAsJsonAsync("/api/v1/cart/items", new {ProductId = productId, Quantity = 1});
+
+        HttpResponseMessage response
+            = await _client.GetAsync("/api/v1/promocodes/quote?code=NOSUCHCODE&tier=Regular&region=Ru");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        QuotePromoCodeDto? quote = await response.Content.ReadFromJsonAsync<QuotePromoCodeDto>();
+
+        Assert.NotNull(quote);
+        Assert.Equal(1000m, quote.TotalPrice);
+        Assert.NotEqual(PromoCodeReason.None, quote.PromoCodeReason);
+    }
+
+    [Fact]
+    public async Task Quote_BelowMinOrderAmount_IsNotApplied()
+    {
+        await _factory.ResetAsync();
+
+        await RegisterAndImpersonateAsync("quote-min@priceforge.test");
+        Guid productId = await CreateProductAsync("QUOTE-3", 100m);
+        await CreatePromoCodeAsync("BIGONLY", 25m, 5000m);
+
+        await _client.PostAsJsonAsync("/api/v1/cart/items", new {ProductId = productId, Quantity = 1});
+
+        HttpResponseMessage response
+            = await _client.GetAsync("/api/v1/promocodes/quote?code=BIGONLY&tier=Regular&region=Ru");
+        response.EnsureSuccessStatusCode();
+
+        QuotePromoCodeDto? quote = await response.Content.ReadFromJsonAsync<QuotePromoCodeDto>();
+
+        Assert.NotNull(quote);
+        Assert.Equal(100m, quote.TotalPrice);
+        Assert.NotEqual(PromoCodeReason.None, quote.PromoCodeReason);
     }
 }
