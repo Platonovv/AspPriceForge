@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using System.Net;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -11,20 +12,26 @@ using Npgsql;
 using PriceForge.Infrastructure.Persistence;
 using PriceForge.IntegrationTests.WebAuthTests;
 using Respawn;
+using StackExchange.Redis;
 using Testcontainers.PostgreSql;
+using Testcontainers.Redis;
 
 namespace PriceForge.IntegrationTests.Factory;
 
 public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgres:16").Build();
+    private readonly RedisContainer _redisContainer = new RedisBuilder("redis:7").Build();
 
     private Respawner _respawner = null!;
     private NpgsqlConnection _connection = null!;
+    private IConnectionMultiplexer _redis = null!;
 
     protected virtual bool UseTestAuth => true;
 
     public string ConnectionString => _container.GetConnectionString();
+
+    public string RedisConnectionString => _redisContainer.GetConnectionString();
 
     public ApiFactory()
     {
@@ -60,12 +67,18 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             services.RemoveAll<IHostedService>();
             services.RemoveAll<IDistributedCache>();
             services.AddDistributedMemoryCache();
+
+            services.RemoveAll<IConnectionMultiplexer>();
+            services.AddSingleton<IConnectionMultiplexer>(_ => _redis);
         });
     }
 
     async Task IAsyncLifetime.InitializeAsync()
     {
         await _container.StartAsync();
+        await _redisContainer.StartAsync();
+
+        _redis = await ConnectionMultiplexer.ConnectAsync($"{RedisConnectionString},allowAdmin=true");
 
         DbContextOptions<AppDbContext> options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(ConnectionString)
             .Options;
@@ -79,11 +92,19 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         await ResetAsync();
     }
 
-    public async Task ResetAsync() => await _respawner.ResetAsync(_connection);
+    public async Task ResetAsync()
+    {
+        await _respawner.ResetAsync(_connection);
+
+        EndPoint endPoint = _redis.GetEndPoints().First();
+        await _redis.GetServer(endPoint).FlushDatabaseAsync();
+    }
 
     async Task IAsyncLifetime.DisposeAsync()
     {
         await _connection.DisposeAsync();
+        await _redis.DisposeAsync();
+        await _redisContainer.DisposeAsync();
         await _container.DisposeAsync();
         await base.DisposeAsync();
     }
