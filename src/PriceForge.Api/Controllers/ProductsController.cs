@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using System.Security.Claims;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -6,6 +7,7 @@ using PriceForge.Api.Contracts.Products;
 using PriceForge.Api.Filters;
 using PriceForge.Api.Hubs;
 using PriceForge.Application.Products;
+using PriceForge.Application.Users;
 using PriceForge.Domain.Pricing;
 
 namespace PriceForge.Api.Controllers;
@@ -16,12 +18,18 @@ namespace PriceForge.Api.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly ISender _sender;
+    private readonly TierService _tierService;
     private readonly IHubContext<PriceHub> _hubContext;
 
-    public ProductsController(ISender sender, IHubContext<PriceHub> hubContext)
+    public ProductsController(ISender sender, IHubContext<PriceHub> hubContext, TierService tierService)
     {
+        ArgumentNullException.ThrowIfNull(sender);
+        ArgumentNullException.ThrowIfNull(hubContext);
+        ArgumentNullException.ThrowIfNull(tierService);
+
         _sender = sender;
         _hubContext = hubContext;
+        _tierService = tierService;
     }
 
     [ServiceFilter(typeof(IdempotencyFilter))]
@@ -52,12 +60,10 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("{id}/price")]
-    public async Task<IActionResult> GetProductPriceById(Guid id,
-                                                         int quantity,
-                                                         CustomerTier tier,
-                                                         Region region,
-                                                         CancellationToken ct)
+    public async Task<IActionResult> GetProductPriceById(Guid id, int quantity, Region region, CancellationToken ct)
     {
+        var userId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        CustomerTier tier = await _tierService.GetCustomerTierAsync(userId, ct);
         MoneyDto money = await _sender.Send(new GetProductPriceQuery(id, quantity, tier, region), ct);
         return Ok(money);
     }

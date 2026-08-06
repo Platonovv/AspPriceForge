@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PriceForge.Application.Authentication;
+using PriceForge.Application.Common.Exceptions;
+using PriceForge.Domain.Pricing;
 using PriceForge.Domain.Users;
 
 namespace PriceForge.Infrastructure.Persistence.Repositories;
@@ -19,6 +21,13 @@ internal sealed class EfUserRepository : IUserRepository
 
     public Task<User?> GetUserByIdAsync(Guid id, CancellationToken cancellationToken)
         => _dbContext.Users.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+    public Task<CustomerTier?> GetTierByIdAsync(Guid id, CancellationToken cancellationToken)
+        => _dbContext.Users
+                     .Where(x => x.Id == id)
+                     .AsNoTracking()
+                     .Select(x => (CustomerTier?) x.Tier)
+                     .FirstOrDefaultAsync(cancellationToken);
 
     public async Task AddAsync(User user, CancellationToken cancellationToken)
         => await _dbContext.Users.AddAsync(user, cancellationToken);

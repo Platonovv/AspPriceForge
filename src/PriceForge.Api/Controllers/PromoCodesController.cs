@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PriceForge.Application.PromoCodes;
+using PriceForge.Application.Users;
 using PriceForge.Domain.Pricing;
 
 namespace PriceForge.Api.Controllers;
@@ -13,10 +14,15 @@ namespace PriceForge.Api.Controllers;
 public class PromoCodesController : ControllerBase
 {
     private readonly ISender _sender;
+    private readonly TierService _tierService;
 
-    public PromoCodesController(ISender sender)
+    public PromoCodesController(ISender sender, TierService tierService)
     {
+        ArgumentNullException.ThrowIfNull(sender);
+        ArgumentNullException.ThrowIfNull(tierService);
+
         _sender = sender;
+        _tierService = tierService;
     }
 
     [Authorize(Policy = "AdminOnly")]
@@ -29,9 +35,10 @@ public class PromoCodesController : ControllerBase
     }
 
     [HttpGet("quote")]
-    public async Task<IActionResult> QuotePromoCode(string code, CustomerTier tier, Region region, CancellationToken ct)
+    public async Task<IActionResult> QuotePromoCode(string code, Region region, CancellationToken ct)
     {
         var userId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        CustomerTier tier = await _tierService.GetCustomerTierAsync(userId, ct);
         QuotePromoCodeDto price = await _sender.Send(new QuotePromoCodeQuery(userId, code, tier, region), ct);
         return Ok(price);
     }

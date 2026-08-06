@@ -1,5 +1,4 @@
 ﻿using MediatR;
-using Microsoft.Extensions.Options;
 using PriceForge.Domain.Users;
 
 namespace PriceForge.Application.Authentication;

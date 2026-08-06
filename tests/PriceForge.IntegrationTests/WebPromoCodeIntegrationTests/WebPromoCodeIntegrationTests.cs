@@ -79,7 +79,7 @@ public class WebPromoCodeIntegrationTests : IClassFixture<ApiFactory>
         await _client.PostAsJsonAsync("/api/v1/cart/items", new {ProductId = productId, Quantity = 1});
 
         HttpResponseMessage response
-            = await _client.GetAsync("/api/v1/promocodes/quote?code=SALE25&tier=Regular&region=Ru");
+            = await _client.GetAsync("/api/v1/promocodes/quote?code=SALE25&region=Ru");
         response.EnsureSuccessStatusCode();
 
         QuotePromoCodeDto? quote = await response.Content.ReadFromJsonAsync<QuotePromoCodeDto>();
@@ -99,7 +99,7 @@ public class WebPromoCodeIntegrationTests : IClassFixture<ApiFactory>
         await _client.PostAsJsonAsync("/api/v1/cart/items", new {ProductId = productId, Quantity = 1});
 
         HttpResponseMessage response
-            = await _client.GetAsync("/api/v1/promocodes/quote?code=NOSUCHCODE&tier=Regular&region=Ru");
+            = await _client.GetAsync("/api/v1/promocodes/quote?code=NOSUCHCODE&region=Ru");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -122,7 +122,7 @@ public class WebPromoCodeIntegrationTests : IClassFixture<ApiFactory>
         await _client.PostAsJsonAsync("/api/v1/cart/items", new {ProductId = productId, Quantity = 1});
 
         HttpResponseMessage response
-            = await _client.GetAsync("/api/v1/promocodes/quote?code=BIGONLY&tier=Regular&region=Ru");
+            = await _client.GetAsync("/api/v1/promocodes/quote?code=BIGONLY&region=Ru");
         response.EnsureSuccessStatusCode();
 
         QuotePromoCodeDto? quote = await response.Content.ReadFromJsonAsync<QuotePromoCodeDto>();

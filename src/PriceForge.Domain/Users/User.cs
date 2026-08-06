@@ -1,12 +1,14 @@
-﻿namespace PriceForge.Domain.Users;
+﻿using PriceForge.Domain.Pricing;
+
+namespace PriceForge.Domain.Users;
 
 public sealed class User
 {
     public Guid Id { get; }
-
     public string Email { get; private set; } = null!;
     public string PasswordHash { get; private set; } = null!;
     public string Role { get; private set; } = null!;
+    public CustomerTier Tier { get; private set; } = CustomerTier.Regular;
 
     public User(string email, string passwordHash, string role) : this(Guid.NewGuid(), email, passwordHash, role)
     {
@@ -37,5 +39,15 @@ public sealed class User
         Email = email;
         PasswordHash = passwordHash;
         Role = role;
+    }
+
+    public void ChangeTier(CustomerTier newTier)
+    {
+        if (newTier == CustomerTier.None || !Enum.IsDefined(typeof(CustomerTier), newTier))
+        {
+            throw new ArgumentException("Tier must be defined", nameof(newTier));
+        }
+
+        Tier = newTier;
     }
 }

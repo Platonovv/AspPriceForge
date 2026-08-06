@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PriceForge.Api.Contracts.Carts;
 using PriceForge.Application.Carts;
+using PriceForge.Application.Users;
 using PriceForge.Domain.Pricing;
 
 namespace PriceForge.Api.Controllers;
@@ -14,16 +15,22 @@ namespace PriceForge.Api.Controllers;
 public class CartController : ControllerBase
 {
     private readonly ISender _sender;
+    private readonly TierService _tierService;
 
-    public CartController(ISender sender)
+    public CartController(ISender sender, TierService tierService)
     {
+        ArgumentNullException.ThrowIfNull(sender);
+        ArgumentNullException.ThrowIfNull(tierService);
+
         _sender = sender;
+        _tierService = tierService;
     }
 
     [HttpGet]
-    public async Task<ActionResult> GetAsync(CustomerTier tier, Region region, CancellationToken ct)
+    public async Task<ActionResult> GetAsync(Region region, CancellationToken ct)
     {
         var userId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        CustomerTier tier = await _tierService.GetCustomerTierAsync(userId, ct);
         CartTotalQueryDto cart = await _sender.Send(new GetCartQuery(userId, tier, region), ct);
         return Ok(cart);
     }

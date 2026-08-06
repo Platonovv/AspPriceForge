@@ -67,14 +67,14 @@ public class WebOrderIntegrationTests : IClassFixture<ApiFactory>
             = await _client.PostAsJsonAsync("/api/v1/cart/items", new {ProductId = productId, Quantity = 2});
         Assert.Equal(HttpStatusCode.NoContent, add.StatusCode);
 
-        HttpResponseMessage cartBefore = await _client.GetAsync("/api/v1/cart?tier=Regular&region=Ru");
+        HttpResponseMessage cartBefore = await _client.GetAsync("/api/v1/cart?region=Ru");
         cartBefore.EnsureSuccessStatusCode();
 
         _client.DefaultRequestHeaders.Remove("Idempotency-Key");
         _client.DefaultRequestHeaders.Add("Idempotency-Key", Guid.NewGuid().ToString());
 
         HttpResponseMessage place
-            = await _client.PostAsync("/api/v1/orders?tier=Regular&region=Ru", null);
+            = await _client.PostAsync("/api/v1/orders?region=Ru", null);
         Assert.Equal(HttpStatusCode.Created, place.StatusCode);
 
         Guid orderId = await place.Content.ReadFromJsonAsync<Guid>();
@@ -93,7 +93,7 @@ public class WebOrderIntegrationTests : IClassFixture<ApiFactory>
         Assert.Equal(2, order.OrderItems[0].Quantity);
         Assert.Equal(1000m, order.OrderItems[0].UnitPrice);
 
-        HttpResponseMessage cartAfter = await _client.GetAsync("/api/v1/cart?tier=Regular&region=Ru");
+        HttpResponseMessage cartAfter = await _client.GetAsync("/api/v1/cart?region=Ru");
         cartAfter.EnsureSuccessStatusCode();
 
         string body = await cartAfter.Content.ReadAsStringAsync();
@@ -125,7 +125,7 @@ public class WebOrderIntegrationTests : IClassFixture<ApiFactory>
         for (var i = 0; i < 3; i++)
         {
             HttpResponseMessage quote
-                = await _client.GetAsync("/api/v1/promocodes/quote?code=SALE25&tier=Regular&region=Ru");
+                = await _client.GetAsync("/api/v1/promocodes/quote?code=SALE25&region=Ru");
             quote.EnsureSuccessStatusCode();
         }
 
@@ -142,7 +142,7 @@ public class WebOrderIntegrationTests : IClassFixture<ApiFactory>
         _client.DefaultRequestHeaders.Add("Idempotency-Key", Guid.NewGuid().ToString());
 
         HttpResponseMessage place
-            = await _client.PostAsync("/api/v1/orders?promoCode=SALE25&tier=Regular&region=Ru", null);
+            = await _client.PostAsync("/api/v1/orders?promoCode=SALE25&region=Ru", null);
         Assert.Equal(HttpStatusCode.Created, place.StatusCode);
 
         Guid orderId = await place.Content.ReadFromJsonAsync<Guid>();
@@ -172,7 +172,7 @@ public class WebOrderIntegrationTests : IClassFixture<ApiFactory>
         _client.DefaultRequestHeaders.Remove("Idempotency-Key");
         _client.DefaultRequestHeaders.Add("Idempotency-Key", Guid.NewGuid().ToString());
 
-        HttpResponseMessage place = await _client.PostAsync("/api/v1/orders?tier=Regular&region=Ru", null);
+        HttpResponseMessage place = await _client.PostAsync("/api/v1/orders?region=Ru", null);
 
         Assert.Equal(HttpStatusCode.BadRequest, place.StatusCode);
     }

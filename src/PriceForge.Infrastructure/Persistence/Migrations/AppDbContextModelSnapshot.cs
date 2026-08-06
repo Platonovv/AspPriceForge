@@ -392,6 +392,13 @@ namespace PriceForge.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("role");
 
+                    b.Property<string>("Tier")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("Regular")
+                        .HasColumnName("tier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")

@@ -25,6 +25,20 @@ public class WebPromotionIntegrationTests : IClassFixture<ApiFactory>
         _client = factory.CreateClient();
     }
 
+    private async Task<Guid> RegisterAndImpersonateAsync(string email)
+    {
+        HttpResponseMessage register
+            = await _client.PostAsJsonAsync("/api/v1/auth/register", new {Email = email, Password = "Passw0rd!"});
+        register.EnsureSuccessStatusCode();
+
+        Guid userId = await register.Content.ReadFromJsonAsync<Guid>();
+
+        _client.DefaultRequestHeaders.Remove(TestAuthHandler.UserIdHeader);
+        _client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, userId.ToString());
+
+        return userId;
+    }
+
     [Fact]
     public async Task Create_AsAdmin_Returns201_AndPersistsPromotion()
     {
@@ -33,6 +47,8 @@ public class WebPromotionIntegrationTests : IClassFixture<ApiFactory>
         // маркер для тестовой auth-схемы (→ Admin) + ключ идемпотентности (требует IdempotencyFilter)
         _client.DefaultRequestHeaders.Add(TestAuthHandler.AuthHeader, "true");
         _client.DefaultRequestHeaders.Add("Idempotency-Key", Guid.NewGuid().ToString());
+
+        await RegisterAndImpersonateAsync("promotion-e2e@priceforge.test");
 
         var command = new {Sku = "E2E-1", Name = "E2E Product", Price = 1500m, Currency = "RUB"};
 
@@ -77,7 +93,7 @@ public class WebPromotionIntegrationTests : IClassFixture<ApiFactory>
 
         // Act — реальный HTTP через весь пайплайн (auth → controller → MediatR → repo → БД)
         HttpResponseMessage resp
-            = await _client.GetAsync($"/api/v1/products/{id}/price?quantity=1&tier=Regular&region=Ru");
+            = await _client.GetAsync($"/api/v1/products/{id}/price?quantity=1&region=Ru");
         resp.EnsureSuccessStatusCode();
         MoneyDto? money = await resp.Content.ReadFromJsonAsync<MoneyDto>(); // System.Net.Http.Json
         Assert.Equal(1125m, money!.Amount);                                 // база 1500m − промо 25%
@@ -100,6 +116,8 @@ public class WebPromotionIntegrationTests : IClassFixture<ApiFactory>
         _client.DefaultRequestHeaders.Add(TestAuthHandler.AuthHeader, "true");
         _client.DefaultRequestHeaders.Add("Idempotency-Key", Guid.NewGuid().ToString());
 
+        await RegisterAndImpersonateAsync("promotion-categories-e2e@priceforge.test");
+
         var command = new {Sku = "E2E-1", Name = "E2E Product", Price = 1000m, Currency = "RUB"};
 
         // Act — реальный HTTP через весь пайплайн (auth → controller → MediatR → repo → БД)
@@ -119,7 +137,7 @@ public class WebPromotionIntegrationTests : IClassFixture<ApiFactory>
 
         // Act — реальный HTTP через весь пайплайн (auth → controller → MediatR → repo → БД)
         HttpResponseMessage productPriceResponse
-            = await _client.GetAsync($"/api/v1/products/{id}/price?quantity=1&tier=Regular&region=Ru");
+            = await _client.GetAsync($"/api/v1/products/{id}/price?quantity=1&region=Ru");
         productPriceResponse.EnsureSuccessStatusCode();
         MoneyDto? productMoney
             = await productPriceResponse.Content.ReadFromJsonAsync<MoneyDto>(); // System.Net.Http.Json
@@ -166,7 +184,7 @@ public class WebPromotionIntegrationTests : IClassFixture<ApiFactory>
 
         // Act — реальный HTTP через весь пайплайн (auth → controller → MediatR → repo → БД)
         HttpResponseMessage resp
-            = await _client.GetAsync($"/api/v1/products/{id}/price?quantity=1&tier=Regular&region=Ru");
+            = await _client.GetAsync($"/api/v1/products/{id}/price?quantity=1&region=Ru");
         resp.EnsureSuccessStatusCode();
         MoneyDto? money = await resp.Content.ReadFromJsonAsync<MoneyDto>(); // System.Net.Http.Json
         Assert.Equal(700m, money!.Amount);                                  // база 1000m − промо 30%

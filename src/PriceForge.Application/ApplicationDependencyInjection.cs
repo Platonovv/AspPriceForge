@@ -5,6 +5,7 @@ using PriceForge.Application.Behaviors;
 using PriceForge.Application.Cache;
 using PriceForge.Application.Caching;
 using PriceForge.Application.Carts;
+using PriceForge.Application.Users;
 using PriceForge.Domain.Pricing;
 using PriceForge.Domain.Pricing.Strategies;
 
@@ -32,6 +33,7 @@ public static class ApplicationDependencyInjection
         services.AddScoped<IPricingStrategy, VolumeStrategy>();
         services.AddScoped<PriceCalculator>();
         services.AddScoped<CartPricingService>();
+        services.AddScoped<TierService>();
         services.AddScoped<ICacheVersion, CacheVersion>();
 
         return services;
