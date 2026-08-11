@@ -16,6 +16,8 @@ public class AuthController : ControllerBase
 
     public AuthController(ISender sender)
     {
+        ArgumentNullException.ThrowIfNull(sender);
+
         _sender = sender;
     }
 

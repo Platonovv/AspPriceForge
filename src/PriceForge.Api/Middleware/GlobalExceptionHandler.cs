@@ -14,6 +14,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         int status = exception switch
         {
             ValidationException         => StatusCodes.Status400BadRequest,
+            BusinessRuleException       => StatusCodes.Status400BadRequest,
             KeyNotFoundException        => StatusCodes.Status404NotFound,
             NotFoundException           => StatusCodes.Status404NotFound,
             InvalidOperationException   => StatusCodes.Status409Conflict,

@@ -2,6 +2,7 @@
 using Npgsql;
 using PriceForge.Application.Common.Exceptions;
 using PriceForge.Application.Products;
+using PriceForge.Application.Search;
 using PriceForge.Domain.Products;
 
 namespace PriceForge.Infrastructure.Persistence.Repositories;
@@ -22,17 +23,48 @@ internal sealed class EfProductRepository : IProductRepository
     public Task<Product?> GetByIdForUpdateAsync(Guid id, CancellationToken ct)
         => _dbContext.Products.Include(x => x.Components).FirstOrDefaultAsync(p => p.Id == id, ct);
 
-    public Task<ProductSummaryDto?> GetSummaryAsync(Guid id, CancellationToken ct)
-        => _dbContext.Products
-                     .Where(p => p.Id == id)
-                     .Select(p => new ProductSummaryDto(p.Name, p.BasePrice.Amount))
-                     .FirstOrDefaultAsync(ct);
-
     public Task<Product?> GetBySkuAsync(Sku sku, CancellationToken ct)
         => _dbContext.Products.Include(x => x.Components).AsNoTracking().FirstOrDefaultAsync(p => p.Sku == sku, ct);
 
     public Task<List<Product>> GetByIdsAsync(List<Guid> ids, CancellationToken ct)
         => _dbContext.Products.Where(p => ids.Contains(p.Id)).AsNoTracking().ToListAsync(ct);
+
+    public async Task<(IReadOnlyList<Product> Items, int Total)> GetProductsByFilterAsync(
+        string? searchString,
+        ProductSearchFilter filter,
+        CancellationToken ct)
+    {
+        IQueryable<Product> query = _dbContext.Products.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(searchString))
+        {
+            bool tryCreate = Sku.TryCreate(searchString, out Sku? sku);
+            query = tryCreate
+                        ? query.Where(p => EF.Functions.ILike(p.Name, $"%{searchString}%") || p.Sku == sku)
+                        : query.Where(p => EF.Functions.ILike(p.Name, $"%{searchString}%"));
+        }
+
+        if (filter.Category != null)
+        {
+            query = query.Where(p => _dbContext.ProductCategories.Any(pc => pc.ProductId == p.Id
+                                                                            && pc.CategoryId == filter.Category));
+        }
+
+        if (filter.MaxPrice is > 0)
+        {
+            query = query.Where(p => p.BasePrice.Amount <= filter.MaxPrice);
+        }
+
+        query = filter.Descending
+                    ? query.OrderByDescending(p => p.BasePrice.Amount).ThenBy(p => p.Id)
+                    : query.OrderBy(p => p.BasePrice.Amount).ThenBy(p => p.Id);
+
+        int total = await query.CountAsync(ct);
+
+        query = query.Skip((filter.PageIndex - 1) * filter.PageSize).Take(filter.PageSize);
+
+        return (await query.ToListAsync(ct), total);
+    }
 
     public Task<bool> ExistsAsync(Guid id, CancellationToken ct) => _dbContext.Products.AnyAsync(p => p.Id == id, ct);
 

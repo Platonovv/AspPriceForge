@@ -1,41 +1,31 @@
-﻿using PriceForge.Application.Categories;
+﻿using PriceForge.Application.Common;
 using PriceForge.Application.Common.Exceptions;
 using PriceForge.Application.Products;
-using PriceForge.Application.Promotions;
 using PriceForge.Domain.Carts;
-using PriceForge.Domain.Categories;
 using PriceForge.Domain.Common;
 using PriceForge.Domain.Pricing;
 using PriceForge.Domain.Products;
-using PriceForge.Domain.Promotions;
 
 namespace PriceForge.Application.Carts;
 
 public sealed class CartPricingService
 {
     private readonly ICartRepository _cartRepository;
-    private readonly PriceCalculator _priceCalculator;
+
     private readonly IProductRepository _productRepository;
-    private readonly IPromotionRepository _promotionRepository;
-    private readonly ICategoryPromotionRepository _categoryPromotionRepository;
+    private readonly ProductPricingService _productPricingService;
 
     public CartPricingService(ICartRepository cartRepository,
                               IProductRepository productRepository,
-                              IPromotionRepository promotionRepository,
-                              ICategoryPromotionRepository categoryPromotionRepository,
-                              PriceCalculator priceCalculator)
+                              ProductPricingService productPricingService)
     {
         ArgumentNullException.ThrowIfNull(cartRepository);
-        ArgumentNullException.ThrowIfNull(priceCalculator);
         ArgumentNullException.ThrowIfNull(productRepository);
-        ArgumentNullException.ThrowIfNull(promotionRepository);
-        ArgumentNullException.ThrowIfNull(categoryPromotionRepository);
+        ArgumentNullException.ThrowIfNull(productPricingService);
 
         _cartRepository = cartRepository;
-        _priceCalculator = priceCalculator;
         _productRepository = productRepository;
-        _promotionRepository = promotionRepository;
-        _categoryPromotionRepository = categoryPromotionRepository;
+        _productPricingService = productPricingService;
     }
 
     public async Task<PricedCart> CalculatePrice(Guid userId,
@@ -54,28 +44,20 @@ public sealed class CartPricingService
                                   cartQueries.FirstOrDefault()?.Currency ?? Currency.RUB);
         }
 
-        var cartCartItemIds = cart.CartItems.Select(x => x.ProductId).ToList();
+        var productIds = cart.CartItems.Select(x => x.ProductId).ToList();
 
-        DateTime currentTime = DateTime.UtcNow;
-
-        List<Product> cartProducts = await _productRepository.GetByIdsAsync(cartCartItemIds, cancellationToken);
-
-        List<Promotion> productPromotions
-            = await _promotionRepository.GetActiveForProductsAsync(cartCartItemIds, currentTime, cancellationToken);
-
-        List<ProductCategoryPromotion> productCategoryPromotions
-            = await _categoryPromotionRepository.GetActiveForProductsAsync(
-                  cartCartItemIds,
-                  currentTime,
-                  cancellationToken);
-
+        List<Product> cartProducts = await _productRepository.GetByIdsAsync(productIds, cancellationToken);
         var cartProductDictionary = cartProducts.ToDictionary(p => p.Id);
-        var productPromotionsDictionary = productPromotions.ToDictionary(p => p.ProductId);
-        var productCategoryPromotionsDictionary = productCategoryPromotions.GroupBy(x => x.ProductId)
-                                                                           .ToDictionary(
-                                                                               g => g.Key,
-                                                                               g => g.Select(x => x.Promotion)
-                                                                                   .ToList());
+
+        var pricingItems = cart.CartItems
+                               .Join(cartProducts,
+                                     item => item.ProductId,
+                                     product => product.Id,
+                                     (item, product) => new PricingItem(product.Id, product.BasePrice, item.Quantity))
+                               .ToList();
+
+        IReadOnlyDictionary<Guid, Money> productPricing
+            = await _productPricingService.CalculateProductPricingAsync(pricingItems, tier, region, cancellationToken);
 
         foreach (CartItem cartItem in cart.CartItems)
         {
@@ -84,24 +66,13 @@ public sealed class CartPricingService
                 continue;
             }
 
-            var pricingContext = new PricingContext(cartProduct.BasePrice, cartItem.Quantity, tier, region);
-
-            Money money = _priceCalculator.Calculate(pricingContext);
-
-            productPromotionsDictionary.TryGetValue(cartItem.ProductId, out Promotion? promotion);
-            productCategoryPromotionsDictionary.TryGetValue(cartItem.ProductId,
-                                                            out List<CategoryPromotion>? categoryPromotions);
-
-            money = _priceCalculator.CalculatePromotion(money, promotion, categoryPromotions, currentTime);
-
-            var cartQueryDto = new PricedCartItem(cartProduct.Id,
-                                                  cartProduct.Name,
-                                                  cartItem.Quantity,
-                                                  money.Amount,
-                                                  money.Amount * cartItem.Quantity,
-                                                  money.Currency);
-
-            cartQueries.Add(cartQueryDto);
+            Money money = productPricing[cartItem.ProductId];
+            cartQueries.Add(new PricedCartItem(cartItem.ProductId,
+                                               cartProduct.Name,
+                                               cartItem.Quantity,
+                                               money.Amount,
+                                               money.Amount * cartItem.Quantity,
+                                               money.Currency));
         }
 
         Currency? cartCurrency = cartQueries.FirstOrDefault()?.Currency;

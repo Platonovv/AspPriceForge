@@ -1,4 +1,5 @@
-﻿using PriceForge.Domain.Products;
+﻿using PriceForge.Application.Search;
+using PriceForge.Domain.Products;
 
 namespace PriceForge.Application.Products;
 
@@ -8,8 +9,12 @@ public interface IProductRepository
     Task<Product?> GetByIdAsync(Guid id, CancellationToken ct);
     Task<Product?> GetByIdForUpdateAsync(Guid id, CancellationToken ct);
     Task<Product?> GetBySkuAsync(Sku sku, CancellationToken ct);
-
     Task<List<Product>> GetByIdsAsync(List<Guid> ids, CancellationToken ct);
+
+    Task<(IReadOnlyList<Product> Items, int Total)> GetProductsByFilterAsync(
+        string? searchString,
+        ProductSearchFilter filter,
+        CancellationToken ct);
 
     Task<bool> ExistsAsync(Guid id, CancellationToken ct);
 

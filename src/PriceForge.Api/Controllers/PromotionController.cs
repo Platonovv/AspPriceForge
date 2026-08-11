@@ -14,6 +14,8 @@ public class PromotionController : ControllerBase
 
     public PromotionController(ISender sender)
     {
+        ArgumentNullException.ThrowIfNull(sender);
+
         _sender = sender;
     }
 

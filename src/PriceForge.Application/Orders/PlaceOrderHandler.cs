@@ -56,7 +56,7 @@ public sealed class PlaceOrderHandler : IRequestHandler<PlaceOrderCommand, Guid>
         if (priceCart.PricedCartItems.Count <= 0)
         {
             _logger.LogError("No items available for cart");
-            throw new ValidationException("No items available for cart");
+            throw new BusinessRuleException("No items available for cart");
         }
 
         decimal discountPercent = 0;
@@ -78,7 +78,7 @@ public sealed class PlaceOrderHandler : IRequestHandler<PlaceOrderCommand, Guid>
             if (!promoCode.IsValid(priceCart.TotalPrice, utcNow).Valid)
             {
                 _logger.LogError("Promo Code not valid");
-                throw new ValidationException("Promo Code does not valid");
+                throw new BusinessRuleException("Promo Code does not valid");
             }
 
             discountPercent = promoCode.DiscountPercent;

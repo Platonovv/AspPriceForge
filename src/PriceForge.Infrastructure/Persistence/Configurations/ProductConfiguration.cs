@@ -32,6 +32,8 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         // 4. Sku должен быть уникальным
         builder.HasIndex(p => p.Sku).IsUnique();
+        // Индекс для поиска
+        builder.HasIndex(p => p.Name).HasMethod("gin").HasOperators("gin_trgm_ops");
 
         // 5. Money как Owned Type
         builder.OwnsOne(p => p.BasePrice,

@@ -17,6 +17,18 @@ public sealed record Sku
 
     public override string ToString() => Value;
 
+    public static bool TryCreate(string? value, out Sku? sku)
+    {
+        if (string.IsNullOrWhiteSpace(value) || !IsAllowedFormat(value))
+        {
+            sku = null;
+            return false;
+        }
+
+        sku = new Sku(value);
+        return true;
+    }
+
     private static bool IsAllowedFormat(string value)
     {
         bool lengthCheck = value.Length is >= 3 and <= 64;

@@ -12,6 +12,8 @@ public class DevicesController : ControllerBase
 
     public DevicesController(ISender sender)
     {
+        ArgumentNullException.ThrowIfNull(sender);
+
         _sender = sender;
     }
 

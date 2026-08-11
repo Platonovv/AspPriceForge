@@ -14,6 +14,8 @@ public class UsersController : ControllerBase
 
     public UsersController(ISender sender)
     {
+        ArgumentNullException.ThrowIfNull(sender);
+
         _sender = sender;
     }
 

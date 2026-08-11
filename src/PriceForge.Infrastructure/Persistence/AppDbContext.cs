@@ -31,6 +31,7 @@ public sealed class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+        modelBuilder.HasPostgresExtension("pg_trgm");
         base.OnModelCreating(modelBuilder);
     }
 

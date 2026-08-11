@@ -15,6 +15,8 @@ public class CategoriesController : ControllerBase
 
     public CategoriesController(ISender sender)
     {
+        ArgumentNullException.ThrowIfNull(sender);
+
         _sender = sender;
     }
 
