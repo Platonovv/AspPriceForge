@@ -6,7 +6,10 @@ using Microsoft.AspNetCore.SignalR;
 using PriceForge.Api.Contracts.Products;
 using PriceForge.Api.Filters;
 using PriceForge.Api.Hubs;
+using PriceForge.Application.Common.Exceptions;
+using PriceForge.Application.Images;
 using PriceForge.Application.Products;
+using PriceForge.Application.Products.Images;
 using PriceForge.Application.Users;
 using PriceForge.Domain.Pricing;
 
@@ -30,6 +33,25 @@ public class ProductsController : ControllerBase
         _sender = sender;
         _hubContext = hubContext;
         _tierService = tierService;
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("{id}/image")]
+    [RequestFormLimits(MultipartBodyLengthLimit = 11 * 1024 * 1024)]
+    [RequestSizeLimit(12 * 1024 * 1024)]
+    public async Task<IActionResult> AssignImage(Guid id, IFormFile file, CancellationToken ct)
+    {
+        switch (file.Length)
+        {
+            case 0:
+                throw new BusinessRuleException("Image is empty");
+            case > 10 * 1024 * 1024:
+                throw new BusinessRuleException("The file is too large");
+        }
+
+        await using Stream content = file.OpenReadStream();
+        await _sender.Send(new AssignImageCommand(id, content, file.Length), ct);
+        return NoContent();
     }
 
     [ServiceFilter(typeof(IdempotencyFilter))]
@@ -73,6 +95,13 @@ public class ProductsController : ControllerBase
     {
         IReadOnlyList<ProductPriceIncreaseDto> priceReportList = await _sender.Send(new GetPriceReportQuery(), ct);
         return Ok(priceReportList);
+    }
+
+    [HttpGet("{id}/image")]
+    public async Task<IActionResult> GetImageUrl(Guid id, CancellationToken ct)
+    {
+        ImageDto imageDto = await _sender.Send(new GetImageQuery(id), ct);
+        return Ok(imageDto);
     }
 
     [HttpPut("{id}/price")]

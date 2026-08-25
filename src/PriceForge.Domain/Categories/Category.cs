@@ -9,6 +9,7 @@ public sealed class Category
     {
     }
 
+    // For EF Core materialization only
     private Category()
     {
     }

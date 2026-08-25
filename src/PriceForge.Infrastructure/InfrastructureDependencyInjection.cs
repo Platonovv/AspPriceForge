@@ -1,10 +1,13 @@
-﻿using FirebaseAdmin;
+﻿using Amazon.Runtime;
+using Amazon.S3;
+using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
@@ -15,6 +18,7 @@ using PriceForge.Application.Carts;
 using PriceForge.Application.Categories;
 using PriceForge.Application.Common;
 using PriceForge.Application.DeviceTokens;
+using PriceForge.Application.Images;
 using PriceForge.Application.Notifications;
 using PriceForge.Application.Orders;
 using PriceForge.Application.Products;
@@ -22,6 +26,7 @@ using PriceForge.Application.PromoCodes;
 using PriceForge.Application.Promotions;
 using PriceForge.Application.Transactions;
 using PriceForge.Infrastructure.Authentication;
+using PriceForge.Infrastructure.Images;
 using PriceForge.Infrastructure.Notifications;
 using PriceForge.Infrastructure.Persistence;
 using PriceForge.Infrastructure.Persistence.Brokers;
@@ -61,8 +66,18 @@ public static class InfrastructureDependencyInjection
             options.Configuration = configuration.GetConnectionString("Redis")!;
         });
 
-        services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
-        services.Configure<SmtpSettings>(configuration.GetSection("Smtp"));
+        services.AddOptions<JwtSettings>()
+                .Bind(configuration.GetSection("Jwt"))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+        services.AddOptions<SmtpSettings>()
+                .Bind(configuration.GetSection("Smtp"))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+        services.AddOptions<StorageSettings>()
+                .Bind(configuration.GetSection("Storage"))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
 
         services.AddSingleton<IConnection>(_ =>
         {
@@ -94,6 +109,17 @@ public static class InfrastructureDependencyInjection
         services.AddSingleton<IProductEventStore, MongoEventStore>();
         services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
 
+        services.AddSingleton<IAmazonS3>(sp =>
+        {
+            StorageSettings storageSettings = sp.GetRequiredService<IOptions<StorageSettings>>().Value;
+            return new AmazonS3Client(new BasicAWSCredentials(storageSettings.AccessKey, storageSettings.SecretKey),
+                                      new AmazonS3Config
+                                      {
+                                          ServiceURL = storageSettings.Endpoint, ForcePathStyle = true
+                                      });
+        });
+        services.AddSingleton<IImageStorage, ImageStorage>();
+
         services.AddScoped<IDapperQuery, DapperQuery>();
 
         services.AddScoped<IIntegrationEventHandler, ProductCreatedEventHandler>();
@@ -116,6 +142,7 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<IPromoCodeRepository, EfPromoCodeRepository>();
 
         services.AddScoped<IProductRepository, EfProductRepository>();
+        services.AddScoped<IProductImageRepository, EfProductImageRepository>();
 
         services.AddScoped<ICategoryRepository, EfCategoryRepository>();
         services.AddScoped<ICategoryPromotionRepository, EfCategoryPromotionRepository>();

@@ -123,6 +123,45 @@ namespace PriceForge.Infrastructure.Persistence.Migrations
                     b.ToTable("product_categories", (string)null);
                 });
 
+            modelBuilder.Entity("PriceForge.Domain.Images.ProductImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("content_type");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("key");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("size_bytes");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId")
+                        .IsUnique();
+
+                    b.ToTable("product_images", (string)null);
+                });
+
             modelBuilder.Entity("PriceForge.Domain.Orders.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -453,6 +492,15 @@ namespace PriceForge.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("PriceForge.Domain.Products.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PriceForge.Domain.Images.ProductImage", b =>
+                {
                     b.HasOne("PriceForge.Domain.Products.Product", null)
                         .WithMany()
                         .HasForeignKey("ProductId")

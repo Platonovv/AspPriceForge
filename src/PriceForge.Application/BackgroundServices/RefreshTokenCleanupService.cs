@@ -16,6 +16,9 @@ public sealed class RefreshTokenCleanupService : BackgroundService
     public RefreshTokenCleanupService(IServiceScopeFactory serviceScopeFactory,
                                       ILogger<RefreshTokenCleanupService> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(serviceScopeFactory);
+
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
     }

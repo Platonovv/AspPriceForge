@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PriceForge.Application.BackgroundServices;
 using PriceForge.Application.Behaviors;
@@ -6,6 +7,7 @@ using PriceForge.Application.Cache;
 using PriceForge.Application.Caching;
 using PriceForge.Application.Carts;
 using PriceForge.Application.Common;
+using PriceForge.Application.Images;
 using PriceForge.Application.Users;
 using PriceForge.Domain.Pricing;
 using PriceForge.Domain.Pricing.Strategies;
@@ -14,7 +16,7 @@ namespace PriceForge.Application;
 
 public static class ApplicationDependencyInjection
 {
-    public static IServiceCollection AddApplication(this IServiceCollection services)
+    public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddValidatorsFromAssembly(typeof(ApplicationDependencyInjection).Assembly);
 
@@ -27,8 +29,14 @@ public static class ApplicationDependencyInjection
             cfg.AddOpenBehavior(typeof(CachingBehavior<,>));
         });
 
+        services.AddOptions<ImageCleanupSettings>()
+                .Bind(configuration.GetSection("ImageCleanup"))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
         services.AddHostedService<RefreshTokenCleanupService>();
         services.AddHostedService<OutboxDispatcher>();
+        services.AddHostedService<ImageCleanupService>();
 
         services.AddScoped<IPricingStrategy, VipDiscountStrategy>();
         services.AddScoped<IPricingStrategy, VolumeStrategy>();
@@ -37,6 +45,7 @@ public static class ApplicationDependencyInjection
         services.AddScoped<ProductPricingService>();
         services.AddScoped<TierService>();
         services.AddScoped<ICacheVersion, CacheVersion>();
+        services.AddScoped<ImageCleaner>();
 
         return services;
     }
