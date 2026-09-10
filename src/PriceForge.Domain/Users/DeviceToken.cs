@@ -1,6 +1,6 @@
 ﻿namespace PriceForge.Domain.Users;
 
-public class DeviceToken
+public sealed class DeviceToken
 {
     public Guid Id { get; }
     public string Token { get; } = null!;

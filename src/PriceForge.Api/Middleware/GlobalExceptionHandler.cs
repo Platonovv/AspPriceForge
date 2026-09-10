@@ -20,6 +20,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             InvalidOperationException   => StatusCodes.Status409Conflict,
             UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
             ConflictException           => StatusCodes.Status409Conflict,
+            TooManyRequestsException    => StatusCodes.Status429TooManyRequests,
             _                           => StatusCodes.Status500InternalServerError
         };
 

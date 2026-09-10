@@ -119,17 +119,22 @@ public static class InfrastructureDependencyInjection
                                       });
         });
         services.AddSingleton<IImageStorage, ImageStorage>();
+        services.AddSingleton<IEmailRateLimiter, EmailRateLimiter>();
 
         services.AddScoped<IDapperQuery, DapperQuery>();
 
         services.AddScoped<IIntegrationEventHandler, ProductCreatedEventHandler>();
         services.AddScoped<IIntegrationEventHandler, ProductPriceChangedEventHandler>();
+        services.AddScoped<IIntegrationEventHandler, SendConfirmEmailEventHandler>();
+        services.AddScoped<IIntegrationEventHandler, ResetPasswordEventHandler>();
 
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddScoped<INotificationChannel, EmailChannel>();
         services.AddScoped<INotificationChannel, PushChannel>();
 
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<IAccessTokenRevoker, AccessTokenRevoker>();
 
         services.AddScoped<IEventPublisher, RabbitMqEventPublisher>();
         services.AddHostedService<RabbitMqConsumer>();
@@ -149,6 +154,7 @@ public static class InfrastructureDependencyInjection
 
         services.AddScoped<ICartRepository, RedisCartRepository>();
         services.AddScoped<IOrderRepository, EfOrderRepository>();
+        services.AddScoped<IUserTokenRepository, EfUserTokenRepository>();
 
         services.AddScoped<ITransactionRunner, TransactionRunner>();
 

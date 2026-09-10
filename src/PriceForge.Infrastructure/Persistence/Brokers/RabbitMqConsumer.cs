@@ -8,7 +8,7 @@ using RabbitMQ.Client.Events;
 
 namespace PriceForge.Infrastructure.Persistence.Brokers;
 
-public class RabbitMqConsumer : BackgroundService
+public sealed class RabbitMqConsumer : BackgroundService
 {
     private readonly IConnection _connection;
     private readonly ILogger<RabbitMqConsumer> _logger;
@@ -34,16 +34,21 @@ public class RabbitMqConsumer : BackgroundService
     {
         _logger.LogInformation("RabbitMqConsumer started");
 
-        IChannel channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
-        await RabbitMqTopology.DeclareAsync(channel, stoppingToken);
+        IChannel productChannel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
+        IChannel emailChannel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
 
+        await RabbitMqTopology.DeclareAsync(productChannel, stoppingToken);
+
+        await BasicConsumeAsync(RabbitMqTopology.PRODUCT_QUEUE, productChannel, stoppingToken);
+        await BasicConsumeAsync(RabbitMqTopology.EMAIL_QUEUE, emailChannel, stoppingToken);
+    }
+
+    private async Task BasicConsumeAsync(string queueName, IChannel channel, CancellationToken stoppingToken)
+    {
         var consumer = new AsyncEventingBasicConsumer(channel);
         consumer.ReceivedAsync += (_, eventArgs) => OnMessageAsync(channel, eventArgs, stoppingToken);
 
-        await channel.BasicConsumeAsync(RabbitMqTopology.QUEUE,
-                                        autoAck: false,
-                                        consumer,
-                                        cancellationToken: stoppingToken);
+        await channel.BasicConsumeAsync(queueName, autoAck: false, consumer, cancellationToken: stoppingToken);
     }
 
     private async Task OnMessageAsync(IChannel channel, BasicDeliverEventArgs eventArgs, CancellationToken ct)

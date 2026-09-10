@@ -9,6 +9,7 @@ public sealed class User
     public string PasswordHash { get; private set; } = null!;
     public string Role { get; private set; } = null!;
     public CustomerTier Tier { get; private set; } = CustomerTier.Regular;
+    public bool IsEmailVerified { get; private set; } = false;
 
     public User(string email, string passwordHash, string role) : this(Guid.NewGuid(), email, passwordHash, role)
     {
@@ -49,5 +50,17 @@ public sealed class User
         }
 
         Tier = newTier;
+    }
+
+    public void EmailConfirmation() => IsEmailVerified = true;
+
+    public void PasswordReset(string newPasswordHash)
+    {
+        if (string.IsNullOrWhiteSpace(newPasswordHash))
+        {
+            throw new ArgumentException("PasswordHash cannot be null or whitespace", nameof(newPasswordHash));
+        }
+
+        PasswordHash = newPasswordHash;
     }
 }

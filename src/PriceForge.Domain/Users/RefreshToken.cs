@@ -9,6 +9,8 @@ public sealed class RefreshToken
 
     public bool IsRevoked { get; private set; }
 
+    public bool IsActive => !IsRevoked && ExpiresAt > DateTime.UtcNow;
+
     public RefreshToken(string token, Guid userId, DateTime expiresAt) : this(Guid.NewGuid(), token, userId, expiresAt)
     {
     }
@@ -39,8 +41,6 @@ public sealed class RefreshToken
         UserId = userId;
         ExpiresAt = expiresAt;
     }
-
-    public bool IsActive => !IsRevoked && ExpiresAt > DateTime.UtcNow;
 
     public void Revoke() => IsRevoked = true;
 }

@@ -3,7 +3,7 @@ using PriceForge.Application.Brokers;
 
 namespace PriceForge.Infrastructure.Persistence.Brokers;
 
-public class LoggingEventPublisher : IEventPublisher
+internal class LoggingEventPublisher : IEventPublisher
 {
     private readonly ILogger<LoggingEventPublisher> _logger;
 

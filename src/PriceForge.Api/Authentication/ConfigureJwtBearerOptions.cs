@@ -1,4 +1,5 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System.Globalization;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -44,15 +45,48 @@ internal sealed class ConfigureJwtBearerOptions : IConfigureNamedOptions<JwtBear
     {
         Claim? claimJti = context.Principal?.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti);
 
-        if (claimJti != null)
+        if (claimJti != null && !await IsTokenValid(context, claimJti))
         {
-            bool isTokenValid = await IsTokenValid(context, claimJti);
-
-            if (!isTokenValid)
-            {
-                context.Fail("Invalid access token");
-            }
+            context.Fail("Invalid access token");
+            return;
         }
+
+        if (await IsTokenRevokedForUser(context))
+        {
+            context.Fail("Invalid access token");
+        }
+    }
+
+    private async Task<bool> IsTokenRevokedForUser(TokenValidatedContext context)
+    {
+        string? userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (userId == null || context.SecurityToken == null)
+        {
+            return false;
+        }
+
+        try
+        {
+            IDistributedCache redis = context.HttpContext.RequestServices.GetRequiredService<IDistributedCache>();
+
+            string? revokedBefore = await redis.GetStringAsync(AccessTokenRevocationKeys.RevokedBefore(userId),
+                                                              context.HttpContext.RequestAborted);
+
+            if (revokedBefore == null
+                || !long.TryParse(revokedBefore, NumberStyles.Integer, CultureInfo.InvariantCulture, out long seconds))
+            {
+                return false;
+            }
+
+            return context.SecurityToken.ValidFrom <= DateTimeOffset.FromUnixTimeSeconds(seconds).UtcDateTime;
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning(e, "Error checking access token revocation");
+        }
+
+        return false;
     }
 
     private async Task<bool> IsTokenValid(TokenValidatedContext context, Claim claimJti)

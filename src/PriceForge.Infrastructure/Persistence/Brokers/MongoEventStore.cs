@@ -7,11 +7,10 @@ using PriceForge.Application.Products;
 
 namespace PriceForge.Infrastructure.Persistence.Brokers;
 
-public class MongoEventStore : IProductEventStore
+internal class MongoEventStore : IProductEventStore
 {
     private readonly ResiliencePipeline _resiliencePipeline;
-    private readonly IMongoCollection<ProductCreatedEvent> _collection;
-    private readonly ILogger<MongoEventStore> _logger;
+    private readonly IMongoCollection<ProductCreatedEvent> _productCreatedCollection;
 
     private const string ProductEvents = "product_events";
 
@@ -20,8 +19,6 @@ public class MongoEventStore : IProductEventStore
         ArgumentNullException.ThrowIfNull(database);
         ArgumentNullException.ThrowIfNull(logger);
 
-        _logger = logger;
-
         _resiliencePipeline = new ResiliencePipelineBuilder().AddRetry(options: new RetryStrategyOptions
                                                              {
                                                                  MaxRetryAttempts = 3,
@@ -29,18 +26,17 @@ public class MongoEventStore : IProductEventStore
                                                                  MaxDelay = TimeSpan.FromMilliseconds(500),
                                                                  BackoffType = DelayBackoffType.Exponential,
                                                                  UseJitter = true,
-                                                                 ShouldHandle
-                                                                     = new PredicateBuilder()
-                                                                       .Handle<MongoException>(ex
-                                                                           => ex is not MongoWriteException
-                                                                           {
-                                                                               WriteError.Category: ServerErrorCategory
-                                                                                   .DuplicateKey
-                                                                           })
-                                                                       .Handle<TimeoutException>(),
+                                                                 ShouldHandle = new PredicateBuilder()
+                                                                     .Handle<MongoException>(ex
+                                                                         => ex is not MongoWriteException
+                                                                         {
+                                                                             WriteError.Category: ServerErrorCategory
+                                                                                 .DuplicateKey
+                                                                         })
+                                                                     .Handle<TimeoutException>(),
                                                                  OnRetry = arguments =>
                                                                  {
-                                                                     _logger.LogInformation(
+                                                                     logger.LogInformation(
                                                                          "Mongo retry number {AttemptNumber}, exception - {Ex}",
                                                                          arguments.AttemptNumber,
                                                                          arguments.Outcome.Exception);
@@ -49,11 +45,11 @@ public class MongoEventStore : IProductEventStore
                                                              })
                                                              .Build();
 
-        _collection = database.GetCollection<ProductCreatedEvent>(ProductEvents);
+        _productCreatedCollection = database.GetCollection<ProductCreatedEvent>(ProductEvents);
     }
 
     public async Task SaveAsync(ProductCreatedEvent productEvent, CancellationToken ct)
         => await _resiliencePipeline.ExecuteAsync(
-               async token => await _collection.InsertOneAsync(productEvent, null, token),
+               async token => await _productCreatedCollection.InsertOneAsync(productEvent, null, token),
                ct);
 }

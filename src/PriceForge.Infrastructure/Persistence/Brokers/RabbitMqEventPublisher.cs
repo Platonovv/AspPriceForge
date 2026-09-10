@@ -5,7 +5,7 @@ using RabbitMQ.Client;
 
 namespace PriceForge.Infrastructure.Persistence.Brokers;
 
-public class RabbitMqEventPublisher : IEventPublisher
+internal class RabbitMqEventPublisher : IEventPublisher
 {
     private readonly IConnection _connection;
     private readonly ILogger<RabbitMqEventPublisher> _logger;

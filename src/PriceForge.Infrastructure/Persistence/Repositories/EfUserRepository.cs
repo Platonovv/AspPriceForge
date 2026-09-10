@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PriceForge.Application.Authentication;
-using PriceForge.Application.Common.Exceptions;
 using PriceForge.Domain.Pricing;
 using PriceForge.Domain.Users;
 

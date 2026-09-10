@@ -30,6 +30,7 @@
       Storage__AccessKey: ${MINIO_ROOT_USER}
       Storage__SecretKey: ${MINIO_ROOT_PASSWORD}
       Storage__Bucket: "product-images"
+      EmailSettings__FrontendBaseUrl: "http://localhost:3000"
     ports:
       - "8080:8080"
     volumes:

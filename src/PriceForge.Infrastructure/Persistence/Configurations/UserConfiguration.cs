@@ -22,6 +22,10 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
                .HasDefaultValue(CustomerTier.Regular)
                .IsRequired();
 
+        builder.Property(x => x.IsEmailVerified)
+               .HasColumnName("is_email_verified")
+               .IsRequired();
+
         builder.HasIndex(x => x.Email).IsUnique();
     }
 }

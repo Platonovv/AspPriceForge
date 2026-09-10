@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using System.Security.Claims;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PriceForge.Api.Contracts.Users;
@@ -24,6 +25,40 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> ChangeTier([FromBody] ChangeUserTierRequest request, CancellationToken ct)
     {
         await _sender.Send(new ChangeUserTierCommand(request.UserId, request.Tier), ct);
+        return NoContent();
+    }
+
+    [Authorize]
+    [HttpPost("send-confirm-email")]
+    public async Task<IActionResult> SendConfirmEmail(CancellationToken ct)
+    {
+        var userId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        await _sender.Send(new SendConfirmEmailCommand(userId), ct);
+        return NoContent();
+    }
+
+    [AllowAnonymous]
+    [HttpPost("confirm-email")]
+    public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailRequest request, CancellationToken ct)
+    {
+        await _sender.Send(new ConfirmEmailCommand(request.Token), ct);
+        return NoContent();
+    }
+
+    [AllowAnonymous]
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct)
+    {
+        await _sender.Send(new ForgotPasswordCommand(request.Email), ct);
+        return NoContent();
+    }
+
+    [AllowAnonymous]
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct)
+    {
+        await _sender.Send(new ResetPasswordCommand(request.Token, request.NewPassword), ct);
+
         return NoContent();
     }
 }

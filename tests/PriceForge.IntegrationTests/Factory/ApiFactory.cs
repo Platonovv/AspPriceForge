@@ -63,6 +63,13 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         Environment.SetEnvironmentVariable("Jwt__Audience", "PriceForgeUsers");
         Environment.SetEnvironmentVariable("Jwt__AccessTokenMinutes", "15");
         Environment.SetEnvironmentVariable("Jwt__RefreshTokenDays", "30");
+        Environment.SetEnvironmentVariable("Smtp__Host", "localhost");
+        Environment.SetEnvironmentVariable("Smtp__Port", "25");
+        Environment.SetEnvironmentVariable("Smtp__User", "test@example.com");
+        Environment.SetEnvironmentVariable("Smtp__Password", "test");
+        Environment.SetEnvironmentVariable("Smtp__From", "test@example.com");
+        Environment.SetEnvironmentVariable("Smtp__To", "test@example.com");
+        Environment.SetEnvironmentVariable("EmailSettings__FrontendBaseUrl", "http://localhost:3000");
 
     }
 
@@ -89,7 +96,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             services.RemoveAll<IConnectionMultiplexer>();
             services.AddSingleton<IConnectionMultiplexer>(_ => _redis);
 
-            services.AddSingleton<IOptions<StorageSettings>>(Options.Create(new StorageSettings
+            services.AddSingleton(Options.Create(new StorageSettings
             {
                 Endpoint = _storageEndpoint,
                 PublicEndpoint = _storageEndpoint,

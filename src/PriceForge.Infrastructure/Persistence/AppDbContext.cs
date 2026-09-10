@@ -25,6 +25,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<PromoCode> PromoCodes => Set<PromoCode>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
+    public DbSet<UserToken> UserTokens => Set<UserToken>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {

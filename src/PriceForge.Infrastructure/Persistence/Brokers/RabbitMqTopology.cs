@@ -1,15 +1,20 @@
-using RabbitMQ.Client;
+﻿using RabbitMQ.Client;
 
 namespace PriceForge.Infrastructure.Persistence.Brokers;
 
 internal static class RabbitMqTopology
 {
     public const string EXCHANGE = "priceforge.events";
-    public const string QUEUE = "product-events";
+    public const string PRODUCT_QUEUE = "product-events";
     public const string ROUTING_KEY = "product.#";
-
     public const string DEAD_LETTER_EXCHANGE = "priceforge.events.dlx";
     public const string DEAD_LETTER_QUEUE = "product-events.dlq";
+
+    public const string EMAIL_QUEUE = "email-events";
+    public const string EMAIL_CONFIRMATION_ROUTING_KEY = "email.confirmation.requested";
+    public const string PASSWORD_RESET_ROUTING_KEY = "reset.password.requested";
+    public const string EMAIL_DEAD_LETTER_EXCHANGE = "priceforge.events.email.dlx";
+    public const string EMAIL_DEAD_LETTER_QUEUE = "email-events.dlq";
 
     public const string RETRY_EXCHANGE = "priceforge.events.retry";
     public const string RETRY_QUEUE = "product-events.retry";
@@ -20,7 +25,7 @@ internal static class RabbitMqTopology
         await channel.ExchangeDeclareAsync(EXCHANGE, ExchangeType.Topic, durable: true, cancellationToken: ct);
 
         // 1. Рабочая очередь: при nack(requeue:false) сообщение уходит в DLX.
-        await channel.QueueDeclareAsync(QUEUE,
+        await channel.QueueDeclareAsync(PRODUCT_QUEUE,
                                         durable: true,
                                         exclusive: false,
                                         autoDelete: false,
@@ -29,7 +34,19 @@ internal static class RabbitMqTopology
                                             ["x-dead-letter-exchange"] = DEAD_LETTER_EXCHANGE
                                         },
                                         cancellationToken: ct);
-        await channel.QueueBindAsync(QUEUE, EXCHANGE, ROUTING_KEY, cancellationToken: ct);
+        await channel.QueueDeclareAsync(EMAIL_QUEUE,
+                                        durable: true,
+                                        exclusive: false,
+                                        autoDelete: false,
+                                        arguments: new Dictionary<string, object?>
+                                        {
+                                            ["x-dead-letter-exchange"] = EMAIL_DEAD_LETTER_EXCHANGE
+                                        },
+                                        cancellationToken: ct);
+
+        await channel.QueueBindAsync(PRODUCT_QUEUE, EXCHANGE, ROUTING_KEY, cancellationToken: ct);
+        await channel.QueueBindAsync(EMAIL_QUEUE, EXCHANGE, EMAIL_CONFIRMATION_ROUTING_KEY, cancellationToken: ct);
+        await channel.QueueBindAsync(EMAIL_QUEUE, EXCHANGE, PASSWORD_RESET_ROUTING_KEY, cancellationToken: ct);
 
         // 2. Dead-letter: финальная парковка ядовитых / исчерпавших повторы.
         await channel.ExchangeDeclareAsync(DEAD_LETTER_EXCHANGE,
@@ -42,6 +59,21 @@ internal static class RabbitMqTopology
                                         autoDelete: false,
                                         cancellationToken: ct);
         await channel.QueueBindAsync(DEAD_LETTER_QUEUE, DEAD_LETTER_EXCHANGE, routingKey: "", cancellationToken: ct);
+
+        // Email
+        await channel.ExchangeDeclareAsync(EMAIL_DEAD_LETTER_EXCHANGE,
+                                           ExchangeType.Fanout,
+                                           durable: true,
+                                           cancellationToken: ct);
+        await channel.QueueDeclareAsync(EMAIL_DEAD_LETTER_QUEUE,
+                                        durable: true,
+                                        exclusive: false,
+                                        autoDelete: false,
+                                        cancellationToken: ct);
+        await channel.QueueBindAsync(EMAIL_DEAD_LETTER_QUEUE,
+                                     EMAIL_DEAD_LETTER_EXCHANGE,
+                                     routingKey: "",
+                                     cancellationToken: ct);
 
         // 3. Retry: полежать TTL, затем dead-letter ОБРАТНО в основной exchange -> вернётся в рабочую очередь.
         await channel.ExchangeDeclareAsync(RETRY_EXCHANGE, ExchangeType.Fanout, durable: true, cancellationToken: ct);

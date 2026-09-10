@@ -9,6 +9,7 @@ using PriceForge.Application.Carts;
 using PriceForge.Application.Common;
 using PriceForge.Application.Images;
 using PriceForge.Application.Users;
+using PriceForge.Application.Users.UserTokens;
 using PriceForge.Domain.Pricing;
 using PriceForge.Domain.Pricing.Strategies;
 
@@ -31,6 +32,11 @@ public static class ApplicationDependencyInjection
 
         services.AddOptions<ImageCleanupSettings>()
                 .Bind(configuration.GetSection("ImageCleanup"))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
+        services.AddOptions<EmailTokenSettings>()
+                .Bind(configuration.GetSection("EmailSettings"))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
