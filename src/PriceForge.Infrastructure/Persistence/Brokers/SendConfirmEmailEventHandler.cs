@@ -11,7 +11,7 @@ public sealed class SendConfirmEmailEventHandler : IIntegrationEventHandler
 {
     private readonly IEmailSender _emailSender;
     private readonly ILogger<SendConfirmEmailEventHandler> _logger;
-    public string EventType => "email.confirmation.requested";
+    public string EventType => IntegrationEventTypes.EmailConfirmationRequested;
 
     public SendConfirmEmailEventHandler(IEmailSender emailSender, ILogger<SendConfirmEmailEventHandler> logger)
     {

@@ -12,7 +12,7 @@ public sealed class ResetPasswordEventHandler : IIntegrationEventHandler
     private readonly IEmailSender _emailSender;
     private readonly ILogger<ResetPasswordEventHandler> _logger;
 
-    public string EventType => "email.password_reset.requested";
+    public string EventType => IntegrationEventTypes.PasswordResetRequested;
 
     public ResetPasswordEventHandler(IEmailSender emailSender, ILogger<ResetPasswordEventHandler> logger)
     {

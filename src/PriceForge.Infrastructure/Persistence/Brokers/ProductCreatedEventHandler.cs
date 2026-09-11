@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using PriceForge.Application.Brokers;
@@ -11,7 +11,7 @@ public sealed class ProductCreatedEventHandler : IIntegrationEventHandler
     private readonly IProductEventStore _eventStore;
     private readonly ILogger<ProductCreatedEventHandler> _logger;
 
-    public string EventType => "product.created";
+    public string EventType => IntegrationEventTypes.ProductCreated;
 
     public ProductCreatedEventHandler(IProductEventStore eventStore, ILogger<ProductCreatedEventHandler> logger)
     {

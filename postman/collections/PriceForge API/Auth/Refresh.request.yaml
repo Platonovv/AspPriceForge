@@ -1,8 +1,0 @@
-$kind: http-request
-name: Refresh
-url: "{{baseUrl}}/api/{{apiVersion}}/auth/refresh"
-method: POST
-body:
-  type: json
-  content: '{ "refreshToken": "4r8HjPZY1BC9URJ/zTYrDhhoPR4k1rb/WPXWdexN8sg=" }'
-order: 1441358797466754

@@ -1,4 +1,5 @@
 ﻿using RabbitMQ.Client;
+using PriceForge.Application.Brokers;
 
 namespace PriceForge.Infrastructure.Persistence.Brokers;
 
@@ -11,8 +12,8 @@ internal static class RabbitMqTopology
     public const string DEAD_LETTER_QUEUE = "product-events.dlq";
 
     public const string EMAIL_QUEUE = "email-events";
-    public const string EMAIL_CONFIRMATION_ROUTING_KEY = "email.confirmation.requested";
-    public const string PASSWORD_RESET_ROUTING_KEY = "reset.password.requested";
+    public const string EMAIL_CONFIRMATION_ROUTING_KEY = IntegrationEventTypes.EmailConfirmationRequested;
+    public const string PASSWORD_RESET_ROUTING_KEY = IntegrationEventTypes.PasswordResetRequested;
     public const string EMAIL_DEAD_LETTER_EXCHANGE = "priceforge.events.email.dlx";
     public const string EMAIL_DEAD_LETTER_QUEUE = "email-events.dlq";
 

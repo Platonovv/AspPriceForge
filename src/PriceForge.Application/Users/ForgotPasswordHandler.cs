@@ -66,7 +66,7 @@ public sealed class ForgotPasswordHandler : IRequestHandler<ForgotPasswordComman
         string resetPasswordUrl = $"{_emailTokenSettings.FrontendBaseUrl}/reset-password?token={token.Token}";
         var resetPasswordEvent = new ResetPasswordEvent(resetPasswordUrl, user.Email);
         string resetPassword = JsonSerializer.Serialize(resetPasswordEvent);
-        var message = new OutboxMessage("email.password_reset.requested", resetPassword);
+        var message = new OutboxMessage(IntegrationEventTypes.PasswordResetRequested, resetPassword);
 
         var userToken = new UserToken(user.Id,
                                       token.Hash,

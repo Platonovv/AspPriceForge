@@ -1,4 +1,0 @@
-name: dev
-values:
-  - key: baseUrl
-    value: ''

@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PriceForge.Domain.Orders;
+using PriceForge.Domain.Users;
 using PriceForge.Domain.PromoCodes;
 using PriceForge.Infrastructure.Persistence;
 using PriceForge.IntegrationTests.Factory;
@@ -23,7 +24,7 @@ public class WebOrderIntegrationTests : IClassFixture<ApiFactory>
         _client.DefaultRequestHeaders.Add(TestAuthHandler.AuthHeader, "true");
     }
 
-    private async Task<Guid> RegisterAndImpersonateAsync(string email)
+    private async Task<Guid> RegisterAndImpersonateAsync(string email, bool verifyEmail = true)
     {
         HttpResponseMessage register
             = await _client.PostAsJsonAsync("/api/v1/auth/register", new {Email = email, Password = "Passw0rd!"});
@@ -34,7 +35,23 @@ public class WebOrderIntegrationTests : IClassFixture<ApiFactory>
         _client.DefaultRequestHeaders.Remove(TestAuthHandler.UserIdHeader);
         _client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, userId.ToString());
 
+        if (verifyEmail)
+        {
+            await VerifyEmailAsync(userId);
+        }
+
         return userId;
+    }
+
+    private async Task VerifyEmailAsync(Guid userId)
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        User user = await db.Users.SingleAsync(x => x.Id == userId);
+        user.EmailConfirmation();
+
+        await db.SaveChangesAsync();
     }
 
     private async Task<Guid> CreateProductAsync(string sku, decimal price)
@@ -160,6 +177,37 @@ public class WebOrderIntegrationTests : IClassFixture<ApiFactory>
         Assert.Equal(750m, order.Total);
         Assert.Equal(250m, order.TotalDiscountAmount);
         Assert.Equal("SALE25", order.PromoCodeName);
+    }
+
+    [Fact]
+    public async Task PlaceOrder_WithUnverifiedEmail_IsForbidden()
+    {
+        await _factory.ResetAsync();
+
+        await RegisterAndImpersonateAsync("unverified-order@priceforge.test", verifyEmail: false);
+        Guid productId = await CreateProductAsync("ORD-UNVERIFIED", 1000m);
+
+        HttpResponseMessage add
+            = await _client.PostAsJsonAsync("/api/v1/cart/items", new {ProductId = productId, Quantity = 1});
+        Assert.Equal(HttpStatusCode.NoContent, add.StatusCode);
+
+        _client.DefaultRequestHeaders.Remove("Idempotency-Key");
+        _client.DefaultRequestHeaders.Add("Idempotency-Key", Guid.NewGuid().ToString());
+
+        HttpResponseMessage place = await _client.PostAsync("/api/v1/orders?region=Ru", null);
+
+        Assert.Equal(HttpStatusCode.Forbidden, place.StatusCode);
+
+        int orders = await CountOrdersAsync();
+        Assert.Equal(0, orders);
+    }
+
+    private async Task<int> CountOrdersAsync()
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        return await db.Orders.CountAsync();
     }
 
     [Fact]

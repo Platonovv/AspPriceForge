@@ -494,3 +494,5 @@ $RECYCLE.BIN/
 # Firebase service account (СЕКРЕТ — серверный ключ FCM)
 *firebase-adminsdk*.json
 firebase-service-account.json
+
+postman/

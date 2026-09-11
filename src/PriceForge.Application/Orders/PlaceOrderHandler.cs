@@ -2,6 +2,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using PriceForge.Application.Authentication;
 using PriceForge.Application.Brokers;
 using PriceForge.Application.Carts;
 using PriceForge.Application.Common.Exceptions;
@@ -9,12 +10,14 @@ using PriceForge.Application.PromoCodes;
 using PriceForge.Application.Transactions;
 using PriceForge.Domain.Orders;
 using PriceForge.Domain.PromoCodes;
+using PriceForge.Domain.Users;
 
 namespace PriceForge.Application.Orders;
 
 public sealed class PlaceOrderHandler : IRequestHandler<PlaceOrderCommand, Guid>
 {
     private readonly ICartRepository _cartRepository;
+    private readonly IUserRepository _userRepository;
     private readonly IOrderRepository _orderRepository;
     private readonly ILogger<PlaceOrderHandler> _logger;
     private readonly IOutboxRepository _outboxRepository;
@@ -23,6 +26,7 @@ public sealed class PlaceOrderHandler : IRequestHandler<PlaceOrderCommand, Guid>
     private readonly IPromoCodeRepository _promoCodeRepository;
 
     public PlaceOrderHandler(ILogger<PlaceOrderHandler> logger,
+                             IUserRepository userRepository,
                              IOrderRepository orderRepository,
                              IPromoCodeRepository promoCodeRepository,
                              IOutboxRepository outboxRepository,
@@ -32,6 +36,7 @@ public sealed class PlaceOrderHandler : IRequestHandler<PlaceOrderCommand, Guid>
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(cartRepository);
+        ArgumentNullException.ThrowIfNull(userRepository);
         ArgumentNullException.ThrowIfNull(orderRepository);
         ArgumentNullException.ThrowIfNull(outboxRepository);
         ArgumentNullException.ThrowIfNull(transactionRunner);
@@ -40,6 +45,7 @@ public sealed class PlaceOrderHandler : IRequestHandler<PlaceOrderCommand, Guid>
 
         _logger = logger;
         _cartRepository = cartRepository;
+        _userRepository = userRepository;
         _orderRepository = orderRepository;
         _outboxRepository = outboxRepository;
         _transactionRunner = transactionRunner;
@@ -49,6 +55,20 @@ public sealed class PlaceOrderHandler : IRequestHandler<PlaceOrderCommand, Guid>
 
     public async Task<Guid> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
     {
+        User? user = await _userRepository.GetUserByIdAsync(request.UserId, cancellationToken);
+
+        if (user == null)
+        {
+            _logger.LogInformation("User not exists");
+            throw new UnauthorizedAccessException("Invalid credentials");
+        }
+
+        if (!user.IsEmailVerified)
+        {
+            _logger.LogInformation("User not verified");
+            throw new ForbiddenException("User is not verified");
+        }
+
         PricedCart priceCart = await _cartPricingService.CalculatePrice(request.UserId,
                                                                         request.Tier,
                                                                         request.Region,
@@ -97,7 +117,7 @@ public sealed class PlaceOrderHandler : IRequestHandler<PlaceOrderCommand, Guid>
 
         var orderCreatedEvent = new OrderCreatedEvent(order.Id, utcNow);
         string productCreated = JsonSerializer.Serialize(orderCreatedEvent);
-        var message = new OutboxMessage("order.placed", productCreated);
+        var message = new OutboxMessage(IntegrationEventTypes.OrderPlaced, productCreated);
 
         Guid orderId = await _transactionRunner.RunAsync(async () =>
                                                          {

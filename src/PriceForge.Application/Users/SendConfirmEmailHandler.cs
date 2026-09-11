@@ -75,7 +75,7 @@ public sealed class SendConfirmEmailHandler : IRequestHandler<SendConfirmEmailCo
         string confirmUrl = $"{_emailTokenSettings.FrontendBaseUrl}/confirm-email?token={token.Token}";
         var confirmEmailCreatedEvent = new SendEmailCreatedEvent(confirmUrl, user.Email);
         string confirmEmailCreated = JsonSerializer.Serialize(confirmEmailCreatedEvent);
-        var message = new OutboxMessage("email.confirmation.requested", confirmEmailCreated);
+        var message = new OutboxMessage(IntegrationEventTypes.EmailConfirmationRequested, confirmEmailCreated);
 
         var userToken = new UserToken(request.UserId,
                                       token.Hash,

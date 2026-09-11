@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using PriceForge.Application.Brokers;
 using PriceForge.Application.Notifications;
@@ -11,7 +11,7 @@ public sealed class ProductPriceChangedEventHandler : IIntegrationEventHandler
     private readonly IEnumerable<INotificationChannel> _notificationChannels;
     private readonly ILogger<ProductPriceChangedEventHandler> _logger;
 
-    public string EventType => "product.price.changed";
+    public string EventType => IntegrationEventTypes.ProductPriceChanged;
 
     public ProductPriceChangedEventHandler(IEnumerable<INotificationChannel> notificationChannels,
                                            ILogger<ProductPriceChangedEventHandler> logger)

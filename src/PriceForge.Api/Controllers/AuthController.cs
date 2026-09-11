@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using PriceForge.Application.Authentication;
+using PriceForge.Application.Users;
 
 namespace PriceForge.Api.Controllers;
 
@@ -60,10 +61,10 @@ public class AuthController : ControllerBase
 
     [Authorize]
     [HttpGet("me")]
-    public IActionResult Me()
+    public async Task<IActionResult> Me(CancellationToken ct)
     {
-        string? userRole = User.FindFirstValue(ClaimTypes.Role);
-        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Ok(new {userId, userRole});
+        var userId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        MeDto me = await _sender.Send(new GetMeQuery(userId), ct);
+        return Ok(me);
     }
 }

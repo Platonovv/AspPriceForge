@@ -28,7 +28,7 @@ public sealed class CreateProductHandler : IRequestHandler<CreateProductCommand,
 
         var productCreatedEvent = new ProductCreatedEvent(product.Id, command.Name, command.Sku, DateTime.UtcNow);
         string productCreated = JsonSerializer.Serialize(productCreatedEvent);
-        var message = new OutboxMessage("product.created", productCreated);
+        var message = new OutboxMessage(IntegrationEventTypes.ProductCreated, productCreated);
 
         await _productRepository.AddAsync(product, cancellationToken);
         await _outboxRepository.AddAsync(message, cancellationToken);

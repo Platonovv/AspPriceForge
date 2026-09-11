@@ -47,7 +47,7 @@ public sealed class UpdateProductPriceHandler : IRequestHandler<UpdateProductPri
                                                                     product.BasePrice.Currency,
                                                                     DateTime.UtcNow);
         string productPriceChanged = JsonSerializer.Serialize(productPriceChangedEvent);
-        var message = new OutboxMessage("product.price.changed", productPriceChanged);
+        var message = new OutboxMessage(IntegrationEventTypes.ProductPriceChanged, productPriceChanged);
 
         await _outboxRepository.AddAsync(message, cancellationToken);
         await _productRepository.SaveChangesAsync(cancellationToken);
