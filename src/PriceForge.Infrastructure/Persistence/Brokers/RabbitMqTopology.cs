@@ -23,7 +23,7 @@ internal static class RabbitMqTopology
     public const string ALTERNATE_QUEUE = "unrouted-events";
 
     public const string RETRY_EXCHANGE = "priceforge.events.retry";
-    public const string RETRY_QUEUE = "product-events.retry";
+    public const string RETRY_QUEUE = "priceforge.events.retry";
     public const int RETRY_DELAY_MS = 10000;
 
     public static async Task DeclareExchangesAsync(IChannel channel, CancellationToken ct)

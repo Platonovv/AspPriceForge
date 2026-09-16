@@ -1,11 +1,11 @@
-﻿using System.Security.Claims;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PriceForge.Api.Filters;
 using PriceForge.Application.Orders;
 using PriceForge.Application.Users;
 using PriceForge.Domain.Pricing;
+using PriceForge.Api.Common;
 
 namespace PriceForge.Api.Controllers;
 
@@ -30,7 +30,7 @@ public class OrdersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(string? promoCode, Region region, CancellationToken ct)
     {
-        var userId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        Guid userId = User.GetUserId();
         CustomerTier tier = await _tierService.GetCustomerTierAsync(userId, ct);
         Guid id = await _sender.Send(new PlaceOrderCommand(userId, promoCode, tier, region), ct);
         return Created($"/api/v1/orders/{id}", id);

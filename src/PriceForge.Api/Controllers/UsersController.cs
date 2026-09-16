@@ -1,7 +1,7 @@
-﻿using System.Security.Claims;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PriceForge.Api.Common;
 using PriceForge.Api.Contracts.Users;
 using PriceForge.Application.Users;
 
@@ -32,7 +32,7 @@ public class UsersController : ControllerBase
     [HttpPost("send-confirm-email")]
     public async Task<IActionResult> SendConfirmEmail(CancellationToken ct)
     {
-        var userId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        Guid userId = User.GetUserId();
         await _sender.Send(new SendConfirmEmailCommand(userId), ct);
         return NoContent();
     }

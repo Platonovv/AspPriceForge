@@ -1,11 +1,11 @@
-﻿using System.Security.Claims;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PriceForge.Api.Contracts.Carts;
 using PriceForge.Application.Carts;
 using PriceForge.Application.Users;
 using PriceForge.Domain.Pricing;
+using PriceForge.Api.Common;
 
 namespace PriceForge.Api.Controllers;
 
@@ -29,7 +29,7 @@ public class CartController : ControllerBase
     [HttpGet]
     public async Task<ActionResult> GetAsync(Region region, CancellationToken ct)
     {
-        var userId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        Guid userId = User.GetUserId();
         CustomerTier tier = await _tierService.GetCustomerTierAsync(userId, ct);
         CartTotalQueryDto cart = await _sender.Send(new GetCartQuery(userId, tier, region), ct);
         return Ok(cart);
@@ -38,7 +38,7 @@ public class CartController : ControllerBase
     [HttpPost("items")]
     public async Task<IActionResult> AddItemToCart([FromBody] AddToCartRequest request, CancellationToken ct)
     {
-        var userId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        Guid userId = User.GetUserId();
         await _sender.Send(new AddToCartCommand(userId, request.ProductId, request.Quantity), ct);
         return NoContent();
     }
@@ -46,7 +46,7 @@ public class CartController : ControllerBase
     [HttpDelete("items/{productId}")]
     public async Task<IActionResult> RemoveItemFromCart([FromRoute] Guid productId, CancellationToken ct)
     {
-        var userId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        Guid userId = User.GetUserId();
         await _sender.Send(new RemoveFromCartCommand(userId, productId), ct);
         return NoContent();
     }

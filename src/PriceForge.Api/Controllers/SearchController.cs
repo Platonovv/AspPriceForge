@@ -1,11 +1,11 @@
-﻿using System.Security.Claims;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PriceForge.Api.Contracts.Search;
 using PriceForge.Application.Search;
 using PriceForge.Application.Users;
 using PriceForge.Domain.Pricing;
+using PriceForge.Api.Common;
 
 namespace PriceForge.Api.Controllers;
 
@@ -35,7 +35,7 @@ public class SearchController : ControllerBase
                                                           searchRequest.PageIndex,
                                                           searchRequest.PageSize,
                                                           searchRequest.Descending);
-        var userId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        Guid userId = User.GetUserId();
         CustomerTier tier = await _tierService.GetCustomerTierAsync(userId, cancellationToken);
         var query = new SearchProductsQuery(searchRequest.SearchString,
                                             productSearchFilter,

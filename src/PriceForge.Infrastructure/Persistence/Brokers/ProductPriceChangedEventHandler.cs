@@ -27,7 +27,7 @@ public sealed class ProductPriceChangedEventHandler : IIntegrationEventHandler
     {
         ProductPriceChangedEvent productPriceChangedEvent
             = JsonSerializer.Deserialize<ProductPriceChangedEvent>(message)
-              ?? throw new InvalidOperationException("Failed to deserialize ProductPriceChangedEvent");
+              ?? throw new JsonException("Failed to deserialize ProductPriceChangedEvent");
 
         foreach (INotificationChannel channel in _notificationChannels)
         {

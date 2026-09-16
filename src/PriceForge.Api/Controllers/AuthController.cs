@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using PriceForge.Application.Authentication;
 using PriceForge.Application.Users;
+using PriceForge.Api.Common;
 
 namespace PriceForge.Api.Controllers;
 
@@ -49,7 +50,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Logout(CancellationToken ct)
     {
         string jti = User.FindFirstValue(JwtRegisteredClaimNames.Jti)!;
-        var userId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        Guid userId = User.GetUserId();
         var expiredAt
             = DateTimeOffset.FromUnixTimeSeconds(long.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Exp)!));
 
@@ -63,7 +64,7 @@ public class AuthController : ControllerBase
     [HttpGet("me")]
     public async Task<IActionResult> Me(CancellationToken ct)
     {
-        var userId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        Guid userId = User.GetUserId();
         MeDto me = await _sender.Send(new GetMeQuery(userId), ct);
         return Ok(me);
     }

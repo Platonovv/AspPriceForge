@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -12,6 +11,7 @@ using PriceForge.Application.Products;
 using PriceForge.Application.Products.Images;
 using PriceForge.Application.Users;
 using PriceForge.Domain.Pricing;
+using PriceForge.Api.Common;
 
 namespace PriceForge.Api.Controllers;
 
@@ -84,7 +84,7 @@ public class ProductsController : ControllerBase
     [HttpGet("{id}/price")]
     public async Task<IActionResult> GetProductPriceById(Guid id, int quantity, Region region, CancellationToken ct)
     {
-        var userId = new Guid(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        Guid userId = User.GetUserId();
         CustomerTier tier = await _tierService.GetCustomerTierAsync(userId, ct);
         MoneyDto money = await _sender.Send(new GetProductPriceQuery(id, quantity, tier, region), ct);
         return Ok(money);

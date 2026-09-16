@@ -1,4 +1,5 @@
-using System.Text;
+﻿using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -76,10 +77,25 @@ public sealed class RabbitMqConsumer : BackgroundService
             await handler.HandleAsync(message, ct);
             await channel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false, ct);
         }
-        catch (Exception ex)
+        catch (JsonException ex)
+        {
+            await DeadLetterAsync(channel, eventArgs, routingKey, ex, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             await HandleFailureAsync(channel, eventArgs, message, routingKey, ex, ct);
         }
+    }
+
+    private async Task DeadLetterAsync(IChannel channel,
+                                       BasicDeliverEventArgs eventArgs,
+                                       string routingKey,
+                                       Exception ex,
+                                       CancellationToken ct)
+    {
+        _logger.LogError(ex, "Event {RoutingKey} cannot be parsed, dead-lettering without retries", routingKey);
+
+        await channel.BasicNackAsync(eventArgs.DeliveryTag, multiple: false, requeue: false, ct);
     }
 
     private async Task HandleFailureAsync(IChannel channel,

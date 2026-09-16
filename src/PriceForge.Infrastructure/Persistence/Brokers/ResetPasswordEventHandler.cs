@@ -26,8 +26,7 @@ public sealed class ResetPasswordEventHandler : IIntegrationEventHandler
     public async Task HandleAsync(string message, CancellationToken ct)
     {
         ResetPasswordEvent resetPasswordEvent = JsonSerializer.Deserialize<ResetPasswordEvent>(message)
-                                                ?? throw new InvalidOperationException(
-                                                    "Failed to deserialize ResetPasswordEvent");
+                                                ?? throw new JsonException("Failed to deserialize ResetPasswordEvent");
 
         var email = new EmailMessage(resetPasswordEvent.Email,
                                      "Сброс пароля",

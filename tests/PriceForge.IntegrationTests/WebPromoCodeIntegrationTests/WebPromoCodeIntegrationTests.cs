@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 using PriceForge.Application.PromoCodes;
 using PriceForge.Domain.PromoCodes;
@@ -18,20 +18,6 @@ public class WebPromoCodeIntegrationTests : IClassFixture<ApiFactory>
         _factory = factory;
         _client = factory.CreateClient();
         _client.DefaultRequestHeaders.Add(TestAuthHandler.AuthHeader, "true");
-    }
-
-    private async Task<Guid> RegisterAndImpersonateAsync(string email)
-    {
-        HttpResponseMessage register
-            = await _client.PostAsJsonAsync("/api/v1/auth/register", new {Email = email, Password = "Passw0rd!"});
-        register.EnsureSuccessStatusCode();
-
-        Guid userId = await register.Content.ReadFromJsonAsync<Guid>();
-
-        _client.DefaultRequestHeaders.Remove(TestAuthHandler.UserIdHeader);
-        _client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, userId.ToString());
-
-        return userId;
     }
 
     private async Task<Guid> CreateProductAsync(string sku, decimal price)
@@ -72,7 +58,7 @@ public class WebPromoCodeIntegrationTests : IClassFixture<ApiFactory>
     {
         await _factory.ResetAsync();
 
-        await RegisterAndImpersonateAsync("quote-valid@priceforge.test");
+        await _client.RegisterAndImpersonateAsync("quote-valid@priceforge.test");
         Guid productId = await CreateProductAsync("QUOTE-1", 1000m);
         await CreatePromoCodeAsync("SALE25", 25m, 100m);
 
@@ -93,7 +79,7 @@ public class WebPromoCodeIntegrationTests : IClassFixture<ApiFactory>
     {
         await _factory.ResetAsync();
 
-        await RegisterAndImpersonateAsync("quote-unknown@priceforge.test");
+        await _client.RegisterAndImpersonateAsync("quote-unknown@priceforge.test");
         Guid productId = await CreateProductAsync("QUOTE-2", 1000m);
 
         await _client.PostAsJsonAsync("/api/v1/cart/items", new {ProductId = productId, Quantity = 1});
@@ -115,7 +101,7 @@ public class WebPromoCodeIntegrationTests : IClassFixture<ApiFactory>
     {
         await _factory.ResetAsync();
 
-        await RegisterAndImpersonateAsync("quote-min@priceforge.test");
+        await _client.RegisterAndImpersonateAsync("quote-min@priceforge.test");
         Guid productId = await CreateProductAsync("QUOTE-3", 100m);
         await CreatePromoCodeAsync("BIGONLY", 25m, 5000m);
 

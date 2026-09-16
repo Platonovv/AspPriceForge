@@ -9,7 +9,7 @@ public sealed class GetProductPriceValidator : AbstractValidator<GetProductPrice
     {
         RuleFor(x => x.ProductId).NotEmpty();
         RuleFor(x => x.Quantity).GreaterThan(0);
-        RuleFor(x => x.Tier).IsInEnum().NotEqual(CustomerTier.None);
+        RuleFor(x => x.Tier).IsInEnum();
         RuleFor(x => x.Region).IsInEnum();
     }
 }

@@ -25,8 +25,7 @@ public sealed class SendConfirmEmailEventHandler : IIntegrationEventHandler
     public async Task HandleAsync(string message, CancellationToken ct)
     {
         SendEmailCreatedEvent sendEmailCreatedEvent = JsonSerializer.Deserialize<SendEmailCreatedEvent>(message)
-                                                      ?? throw new InvalidOperationException(
-                                                          "Failed to deserialize SendEmailCreatedEvent");
+                                                      ?? throw new JsonException("Failed to deserialize SendEmailCreatedEvent");
 
         var email = new EmailMessage(sendEmailCreatedEvent.Email,
                                      "Подтвердите адрес в PriceForge",

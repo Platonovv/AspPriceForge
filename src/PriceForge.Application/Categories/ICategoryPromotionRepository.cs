@@ -1,5 +1,6 @@
 ﻿using PriceForge.Application.Carts;
 using PriceForge.Domain.Categories;
+using PriceForge.Application.Common;
 
 namespace PriceForge.Application.Categories;
 

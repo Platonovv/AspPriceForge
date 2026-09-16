@@ -25,7 +25,7 @@ public sealed class ProductCreatedEventHandler : IIntegrationEventHandler
     public async Task HandleAsync(string message, CancellationToken ct)
     {
         ProductCreatedEvent productCreatedEvent = JsonSerializer.Deserialize<ProductCreatedEvent>(message)
-                                                  ?? throw new InvalidOperationException(
+                                                  ?? throw new JsonException(
                                                       "Failed to deserialize ProductCreatedEvent");
         try
         {

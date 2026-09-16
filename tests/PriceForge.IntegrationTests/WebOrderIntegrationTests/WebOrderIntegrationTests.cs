@@ -24,36 +24,6 @@ public class WebOrderIntegrationTests : IClassFixture<ApiFactory>
         _client.DefaultRequestHeaders.Add(TestAuthHandler.AuthHeader, "true");
     }
 
-    private async Task<Guid> RegisterAndImpersonateAsync(string email, bool verifyEmail = true)
-    {
-        HttpResponseMessage register
-            = await _client.PostAsJsonAsync("/api/v1/auth/register", new {Email = email, Password = "Passw0rd!"});
-        register.EnsureSuccessStatusCode();
-
-        Guid userId = await register.Content.ReadFromJsonAsync<Guid>();
-
-        _client.DefaultRequestHeaders.Remove(TestAuthHandler.UserIdHeader);
-        _client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, userId.ToString());
-
-        if (verifyEmail)
-        {
-            await VerifyEmailAsync(userId);
-        }
-
-        return userId;
-    }
-
-    private async Task VerifyEmailAsync(Guid userId)
-    {
-        using IServiceScope scope = _factory.Services.CreateScope();
-        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-        User user = await db.Users.SingleAsync(x => x.Id == userId);
-        user.EmailConfirmation();
-
-        await db.SaveChangesAsync();
-    }
-
     private async Task<Guid> CreateProductAsync(string sku, decimal price)
     {
         _client.DefaultRequestHeaders.Remove("Idempotency-Key");
@@ -77,7 +47,8 @@ public class WebOrderIntegrationTests : IClassFixture<ApiFactory>
     {
         await _factory.ResetAsync();
 
-        Guid userId = await RegisterAndImpersonateAsync("order@priceforge.test");
+        Guid userId = await _client.RegisterAndImpersonateAsync("order@priceforge.test");
+        await _factory.VerifyEmailAsync(userId);
         Guid productId = await CreateProductAsync("ORD-1", 1000m);
 
         HttpResponseMessage add
@@ -122,7 +93,7 @@ public class WebOrderIntegrationTests : IClassFixture<ApiFactory>
     {
         await _factory.ResetAsync();
 
-        await RegisterAndImpersonateAsync("promo-order@priceforge.test");
+        await _factory.VerifyEmailAsync(await _client.RegisterAndImpersonateAsync("promo-order@priceforge.test"));
         Guid productId = await CreateProductAsync("ORD-2", 1000m);
 
         HttpResponseMessage createPromo = await _client.PostAsJsonAsync("/api/v1/promocodes",
@@ -184,7 +155,7 @@ public class WebOrderIntegrationTests : IClassFixture<ApiFactory>
     {
         await _factory.ResetAsync();
 
-        await RegisterAndImpersonateAsync("unverified-order@priceforge.test", verifyEmail: false);
+        await _client.RegisterAndImpersonateAsync("unverified-order@priceforge.test");
         Guid productId = await CreateProductAsync("ORD-UNVERIFIED", 1000m);
 
         HttpResponseMessage add
@@ -215,7 +186,7 @@ public class WebOrderIntegrationTests : IClassFixture<ApiFactory>
     {
         await _factory.ResetAsync();
 
-        await RegisterAndImpersonateAsync("empty-order@priceforge.test");
+        await _factory.VerifyEmailAsync(await _client.RegisterAndImpersonateAsync("empty-order@priceforge.test"));
 
         _client.DefaultRequestHeaders.Remove("Idempotency-Key");
         _client.DefaultRequestHeaders.Add("Idempotency-Key", Guid.NewGuid().ToString());

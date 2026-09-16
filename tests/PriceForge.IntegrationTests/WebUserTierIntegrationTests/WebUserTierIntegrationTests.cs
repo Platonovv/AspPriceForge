@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 using PriceForge.Application.Products;
 using PriceForge.Domain.Pricing;
@@ -18,20 +18,6 @@ public class WebUserTierIntegrationTests : IClassFixture<ApiFactory>
         _factory = factory;
         _client = factory.CreateClient();
         _client.DefaultRequestHeaders.Add(TestAuthHandler.AuthHeader, "true");
-    }
-
-    private async Task<Guid> RegisterAndImpersonateAsync(string email)
-    {
-        HttpResponseMessage register
-            = await _client.PostAsJsonAsync("/api/v1/auth/register", new {Email = email, Password = "Passw0rd!"});
-        register.EnsureSuccessStatusCode();
-
-        Guid userId = await register.Content.ReadFromJsonAsync<Guid>();
-
-        _client.DefaultRequestHeaders.Remove(TestAuthHandler.UserIdHeader);
-        _client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, userId.ToString());
-
-        return userId;
     }
 
     private async Task<Guid> CreateProductAsync(string sku, decimal price)
@@ -69,7 +55,7 @@ public class WebUserTierIntegrationTests : IClassFixture<ApiFactory>
     {
         await _factory.ResetAsync();
 
-        await RegisterAndImpersonateAsync("tier-query@priceforge.test");
+        await _client.RegisterAndImpersonateAsync("tier-query@priceforge.test");
         Guid productId = await CreateProductAsync("TIER-1", 1000m);
 
         decimal claimingVip = await GetPriceAsync(productId, "quantity=1&tier=Vip&region=Ru");
@@ -82,7 +68,7 @@ public class WebUserTierIntegrationTests : IClassFixture<ApiFactory>
     {
         await _factory.ResetAsync();
 
-        Guid userId = await RegisterAndImpersonateAsync("tier-admin@priceforge.test");
+        Guid userId = await _client.RegisterAndImpersonateAsync("tier-admin@priceforge.test");
         Guid productId = await CreateProductAsync("TIER-2", 1000m);
 
         decimal beforeChange = await GetPriceAsync(productId, "quantity=1&region=Ru");
@@ -108,7 +94,7 @@ public class WebUserTierIntegrationTests : IClassFixture<ApiFactory>
     {
         await _factory.ResetAsync();
 
-        Guid userId = await RegisterAndImpersonateAsync("tier-none@priceforge.test");
+        Guid userId = await _client.RegisterAndImpersonateAsync("tier-none@priceforge.test");
 
         HttpResponseMessage change = await _client.PostAsJsonAsync("/api/v1/users/change-tier",
                                                                     new
@@ -125,7 +111,7 @@ public class WebUserTierIntegrationTests : IClassFixture<ApiFactory>
     {
         await _factory.ResetAsync();
 
-        await RegisterAndImpersonateAsync("tier-missing@priceforge.test");
+        await _client.RegisterAndImpersonateAsync("tier-missing@priceforge.test");
 
         HttpResponseMessage change = await _client.PostAsJsonAsync("/api/v1/users/change-tier",
                                                                     new

@@ -2,6 +2,7 @@
 using PriceForge.Application.Carts;
 using PriceForge.Application.Categories;
 using PriceForge.Domain.Categories;
+using PriceForge.Application.Common;
 
 namespace PriceForge.Infrastructure.Persistence.Repositories;
 

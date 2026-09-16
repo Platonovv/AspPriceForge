@@ -24,6 +24,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
                .HasColumnName("tier")
                .HasConversion<string>()
                .HasDefaultValue(CustomerTier.Regular)
+               .HasSentinel(CustomerTier.None)
                .IsRequired();
 
         builder.Property(x => x.IsEmailVerified).HasColumnName("is_email_verified").HasDefaultValue(false).IsRequired();

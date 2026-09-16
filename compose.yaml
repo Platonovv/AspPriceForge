@@ -80,6 +80,8 @@
     environment:
       RABBITMQ_DEFAULT_USER: priceforge
       RABBITMQ_DEFAULT_PASS: ${DB_PASSWORD}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
 
   mongo:
     image: mongo:7
@@ -190,5 +192,6 @@
 
 volumes:
   postgres-data:
+  rabbitmq-data:
   mongo-data:
   minio-data:
