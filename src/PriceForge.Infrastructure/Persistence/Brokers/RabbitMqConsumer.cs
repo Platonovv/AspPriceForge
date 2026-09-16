@@ -34,7 +34,10 @@ public sealed class RabbitMqConsumer : BackgroundService
     {
         _logger.LogInformation("RabbitMqConsumer started");
 
-        IChannel productChannel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
+        IChannel productChannel = await _connection.CreateChannelAsync(
+                                      new CreateChannelOptions(publisherConfirmationsEnabled: true,
+                                                               publisherConfirmationTrackingEnabled: true),
+                                      cancellationToken: stoppingToken);
         IChannel emailChannel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
 
         await RabbitMqTopology.DeclareAsync(productChannel, stoppingToken);

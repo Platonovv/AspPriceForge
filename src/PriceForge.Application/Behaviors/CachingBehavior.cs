@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
@@ -40,24 +40,22 @@ public sealed class CachingBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
         string version = await _cacheVersion.GetAsync(cancellationToken);
         string key = $"v{version}:{cacheableRequest.CacheKey}";
 
-        string? cachedJson = await _cache.GetStringAsync(key, cancellationToken);
-        if (cachedJson != null)
+        (bool Found, TResponse Value) cached = await TryGetFromCacheAsync(key, cancellationToken);
+
+        if (cached.Found)
         {
-            TResponse hit = JsonSerializer.Deserialize<TResponse>(cachedJson) ?? throw new InvalidOperationException();
-            _logger.LogInformation("Cache HIT {key}", key);
-            return hit;
+            return cached.Value;
         }
 
         await gate.WaitAsync(cancellationToken);
+
         try
         {
-            cachedJson = await _cache.GetStringAsync(key, cancellationToken);
-            if (cachedJson != null)
+            cached = await TryGetFromCacheAsync(key, cancellationToken);
+
+            if (cached.Found)
             {
-                TResponse hit = JsonSerializer.Deserialize<TResponse>(cachedJson)
-                                ?? throw new InvalidOperationException();
-                _logger.LogInformation("Cache HIT {key}", key);
-                return hit;
+                return cached.Value;
             }
 
             TResponse response = await next();
@@ -68,12 +66,43 @@ public sealed class CachingBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
                                             AbsoluteExpirationRelativeToNow = cacheableRequest.Expiration
                                         },
                                         cancellationToken);
-            _logger.LogInformation("Cache MISS {key}", key);
+            _logger.LogInformation("Cache MISS {Key}", key);
             return response;
         }
         finally
         {
             gate.Release();
         }
+    }
+
+    private async Task<(bool Found, TResponse Value)> TryGetFromCacheAsync(string key,
+                                                                          CancellationToken cancellationToken)
+    {
+        string? cachedJson = await _cache.GetStringAsync(key, cancellationToken);
+
+        if (cachedJson == null)
+        {
+            return (false, default!);
+        }
+
+        try
+        {
+            TResponse? hit = JsonSerializer.Deserialize<TResponse>(cachedJson);
+
+            if (hit != null)
+            {
+                _logger.LogInformation("Cache HIT {Key}", key);
+                return (true, hit);
+            }
+
+            _logger.LogWarning("Cache {Key} contains null, removed", key);
+        }
+        catch (JsonException jsonException)
+        {
+            _logger.LogWarning(jsonException, "Cache {Key} is corrupted, removed", key);
+        }
+
+        await _cache.RemoveAsync(key, cancellationToken);
+        return (false, default!);
     }
 }

@@ -30,7 +30,7 @@ public class OutboxDispatcher : BackgroundService
         {
             try
             {
-                using (IServiceScope scope = _serviceScopeFactory.CreateScope())
+                await using (AsyncServiceScope scope = _serviceScopeFactory.CreateAsyncScope())
                 {
                     IOutboxRepository outboxRepository = scope.ServiceProvider.GetRequiredService<IOutboxRepository>();
                     IEventPublisher eventPublisher = scope.ServiceProvider.GetRequiredService<IEventPublisher>();
@@ -39,8 +39,15 @@ public class OutboxDispatcher : BackgroundService
 
                     foreach (OutboxMessage outboxMessage in unpublishedList)
                     {
-                        await eventPublisher.PublishAsync(outboxMessage, stoppingToken);
-                        outboxMessage.MarkPublished();
+                        try
+                        {
+                            await eventPublisher.PublishAsync(outboxMessage, stoppingToken);
+                            outboxMessage.MarkPublished();
+                        }
+                        catch (Exception e) when (e is not OperationCanceledException)
+                        {
+                            _logger.LogError(e, "Outbox Dispatcher failed publish at {Time}", DateTime.UtcNow);
+                        }
                     }
 
                     await outboxRepository.SaveChangesAsync(stoppingToken);

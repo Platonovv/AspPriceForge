@@ -5,10 +5,12 @@ using RabbitMQ.Client;
 
 namespace PriceForge.Infrastructure.Persistence.Brokers;
 
-internal class RabbitMqEventPublisher : IEventPublisher
+internal class RabbitMqEventPublisher : IEventPublisher, IAsyncDisposable
 {
     private readonly IConnection _connection;
     private readonly ILogger<RabbitMqEventPublisher> _logger;
+
+    private IChannel? _channel;
 
     public RabbitMqEventPublisher(ILogger<RabbitMqEventPublisher> logger, IConnection connection)
     {
@@ -21,23 +23,32 @@ internal class RabbitMqEventPublisher : IEventPublisher
 
     public async Task PublishAsync(OutboxMessage message, CancellationToken ct)
     {
-        await using (IChannel channel = await _connection.CreateChannelAsync(cancellationToken: ct))
+        if (_channel == null)
         {
-            _logger.LogInformation("Publishing {@Event}", message);
+            _channel = await _connection.CreateChannelAsync(
+                           new CreateChannelOptions(publisherConfirmationsEnabled: true,
+                                                    publisherConfirmationTrackingEnabled: true),
+                           cancellationToken: ct);
+            await RabbitMqTopology.DeclareExchangesAsync(_channel, ct);
+        }
 
-            await channel.ExchangeDeclareAsync(RabbitMqTopology.EXCHANGE,
-                                               ExchangeType.Topic,
-                                               durable: true,
-                                               cancellationToken: ct);
+        _logger.LogInformation("Publishing {@Event}", message);
 
-            byte[] messageInByte = Encoding.UTF8.GetBytes(message.Content);
-            var basicProperties = new BasicProperties {Persistent = true};
-            await channel.BasicPublishAsync(exchange: RabbitMqTopology.EXCHANGE,
-                                            routingKey: message.Type,
-                                            mandatory: false,
-                                            basicProperties: basicProperties,
-                                            body: messageInByte,
-                                            cancellationToken: ct);
+        byte[] messageInByte = Encoding.UTF8.GetBytes(message.Content);
+        var basicProperties = new BasicProperties {Persistent = true};
+        await _channel.BasicPublishAsync(exchange: RabbitMqTopology.EXCHANGE,
+                                         routingKey: message.Type,
+                                         mandatory: false,
+                                         basicProperties: basicProperties,
+                                         body: messageInByte,
+                                         cancellationToken: ct);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_channel != null)
+        {
+            await _channel.DisposeAsync();
         }
     }
 }

@@ -17,11 +17,11 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             BusinessRuleException       => StatusCodes.Status400BadRequest,
             KeyNotFoundException        => StatusCodes.Status404NotFound,
             NotFoundException           => StatusCodes.Status404NotFound,
-            InvalidOperationException   => StatusCodes.Status409Conflict,
             UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
             ConflictException           => StatusCodes.Status409Conflict,
             ForbiddenException          => StatusCodes.Status403Forbidden,
             TooManyRequestsException    => StatusCodes.Status429TooManyRequests,
+            DomainException             => StatusCodes.Status400BadRequest,
             _                           => StatusCodes.Status500InternalServerError
         };
 

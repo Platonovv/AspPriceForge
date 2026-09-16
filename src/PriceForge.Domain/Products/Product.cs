@@ -1,4 +1,5 @@
-﻿using PriceForge.Domain.Common;
+﻿using PriceForge.Application.Common.Exceptions;
+using PriceForge.Domain.Common;
 
 namespace PriceForge.Domain.Products;
 
@@ -72,7 +73,7 @@ public sealed class Product
 
         if (existing != null)
         {
-            throw new InvalidOperationException($"Component with childId {childId} already exists");
+            throw new DomainException($"Component with childId {childId} already exists");
         }
 
         _components.Add(new ProductComponent(Id, childId, quantity));

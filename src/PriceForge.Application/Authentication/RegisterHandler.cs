@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using PriceForge.Application.Common.Exceptions;
 using PriceForge.Domain.Users;
 
 namespace PriceForge.Application.Authentication;
@@ -23,7 +24,7 @@ public sealed class RegisterHandler : IRequestHandler<RegisterCommand, Guid>
 
         if (userExist != null)
         {
-            throw new InvalidOperationException("User already exists");
+            throw new ConflictException("User already exists");
         }
 
         string hashPassword = _passwordHasher.Hash(command.Password);
