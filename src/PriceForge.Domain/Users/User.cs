@@ -5,13 +5,13 @@ namespace PriceForge.Domain.Users;
 public sealed class User
 {
     public Guid Id { get; }
-    public string Email { get; private set; } = null!;
+    public Email Email { get; private set; } = null!;
     public string PasswordHash { get; private set; } = null!;
     public string Role { get; private set; } = null!;
     public CustomerTier Tier { get; private set; } = CustomerTier.Regular;
     public bool IsEmailVerified { get; private set; } = false;
 
-    public User(string email, string passwordHash, string role) : this(Guid.NewGuid(), email, passwordHash, role)
+    public User(Email email, string passwordHash, string role) : this(Guid.NewGuid(), email, passwordHash, role)
     {
     }
 
@@ -19,13 +19,8 @@ public sealed class User
     {
     }
 
-    private User(Guid id, string email, string passwordHash, string role)
+    private User(Guid id, Email email, string passwordHash, string role)
     {
-        if (string.IsNullOrWhiteSpace(email) || !email.Contains('@'))
-        {
-            throw new ArgumentException("Email must be a valid non-empty address", nameof(email));
-        }
-
         if (string.IsNullOrWhiteSpace(passwordHash))
         {
             throw new ArgumentException("PasswordHash cannot be null or whitespace", nameof(passwordHash));

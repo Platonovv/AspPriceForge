@@ -31,8 +31,9 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     private const string MinioUser = "minioadmin";
     private const string MinioPassword = "minioadmin";
     private const string BucketName = "product-images";
+    private const string MinioImage = "quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z";
 
-    private readonly MinioContainer _minioContainer = new MinioBuilder("minio/minio")
+    private readonly MinioContainer _minioContainer = new MinioBuilder().WithImage(MinioImage)
                                                       .WithUsername(MinioUser)
                                                       .WithPassword(MinioPassword)
                                                       .Build();
@@ -176,9 +177,18 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     async Task IAsyncLifetime.DisposeAsync()
     {
-        _s3Client.Dispose();
-        await _connection.DisposeAsync();
-        await _redis.DisposeAsync();
+        _s3Client?.Dispose();
+
+        if (_connection != null)
+        {
+            await _connection.DisposeAsync();
+        }
+
+        if (_redis != null)
+        {
+            await _redis.DisposeAsync();
+        }
+
         await _redisContainer.DisposeAsync();
         await _container.DisposeAsync();
         await _minioContainer.DisposeAsync();

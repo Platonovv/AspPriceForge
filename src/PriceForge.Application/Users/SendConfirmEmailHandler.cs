@@ -60,9 +60,9 @@ public sealed class SendConfirmEmailHandler : IRequestHandler<SendConfirmEmailCo
             return;
         }
 
-        string userEmail = user.Email.ToLowerInvariant();
+        Email userEmail = user.Email;
 
-        if (!await _emailRateLimiter.TryConsumeAsync($"confirm-email:{userEmail}",
+        if (!await _emailRateLimiter.TryConsumeAsync($"confirm-email:{userEmail.Value}",
                                                      _emailTokenSettings.EmailsPerWindowLimit,
                                                      TimeSpan.FromHours(_emailTokenSettings.WindowHour),
                                                      cancellationToken))
@@ -73,7 +73,7 @@ public sealed class SendConfirmEmailHandler : IRequestHandler<SendConfirmEmailCo
         GeneratedToken token = TokenGenerator.GenerateToken();
 
         string confirmUrl = $"{_emailTokenSettings.FrontendBaseUrl}/confirm-email?token={token.Token}";
-        var confirmEmailCreatedEvent = new SendEmailCreatedEvent(confirmUrl, user.Email);
+        var confirmEmailCreatedEvent = new SendEmailCreatedEvent(confirmUrl, user.Email.Value);
         string confirmEmailCreated = JsonSerializer.Serialize(confirmEmailCreatedEvent);
         var message = new OutboxMessage(IntegrationEventTypes.EmailConfirmationRequested, confirmEmailCreated);
 

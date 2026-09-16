@@ -40,7 +40,7 @@ public sealed class RefreshHandler : IRequestHandler<RefreshCommand, LoginResult
 
         tokenExists.Revoke();
 
-        string accessToken = _jwtTokenGenerator.GenerateAccessToken(user.Id, user.Email, user.Role);
+        string accessToken = _jwtTokenGenerator.GenerateAccessToken(user.Id, user.Email.Value, user.Role);
 
         RefreshTokenResult refreshTokenResult = _jwtTokenGenerator.GenerateRefreshToken();
         var refreshToken = new RefreshToken(refreshTokenResult.Token, user.Id, refreshTokenResult.ExpiresAt);

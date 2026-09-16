@@ -20,7 +20,8 @@ public sealed class RegisterHandler : IRequestHandler<RegisterCommand, Guid>
 
     public async Task<Guid> Handle(RegisterCommand command, CancellationToken cancellationToken)
     {
-        User? userExist = await _userRepository.GetUserByEmailAsync(command.Email, cancellationToken);
+        var email = new Email(command.Email);
+        User? userExist = await _userRepository.GetUserByEmailAsync(email, cancellationToken);
 
         if (userExist != null)
         {
@@ -28,7 +29,7 @@ public sealed class RegisterHandler : IRequestHandler<RegisterCommand, Guid>
         }
 
         string hashPassword = _passwordHasher.Hash(command.Password);
-        var user = new User(command.Email, hashPassword, "User");
+        var user = new User(email, hashPassword, "User");
 
         await _userRepository.AddAsync(user, cancellationToken);
         await _userRepository.SaveChangesAsync(cancellationToken);

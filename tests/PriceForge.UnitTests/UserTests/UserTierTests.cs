@@ -6,7 +6,7 @@ namespace PriceForge.UnitTests.UserTests;
 [Trait("Category", "Unit")]
 public class UserTierTests
 {
-    private static User CreateUser() => new("tier@priceforge.test", "hash", "User");
+    private static User CreateUser() => new(new Email("tier@priceforge.test"), "hash", "User");
 
     [Fact]
     public void NewUser_IsRegular()
@@ -28,7 +28,7 @@ public class UserTierTests
 
     [Theory]
     [InlineData(CustomerTier.None)]
-    [InlineData((CustomerTier)99)]
+    [InlineData((CustomerTier) 99)]
     public void ChangeTier_WithInvalidTier_Throws(CustomerTier tier)
     {
         User user = CreateUser();

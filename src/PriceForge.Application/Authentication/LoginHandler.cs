@@ -28,7 +28,7 @@ internal sealed class LoginHandler : IRequestHandler<LoginCommand, LoginResult>
 
     public async Task<LoginResult> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        User? userExist = await _userRepository.GetUserByEmailAsync(request.Email, cancellationToken);
+        User? userExist = await _userRepository.GetUserByEmailAsync(new Email(request.Email), cancellationToken);
 
         if (userExist == null)
         {
@@ -42,7 +42,8 @@ internal sealed class LoginHandler : IRequestHandler<LoginCommand, LoginResult>
             throw new UnauthorizedAccessException("Invalid credentials");
         }
 
-        string accessToken = _jwtTokenGenerator.GenerateAccessToken(userExist.Id, userExist.Email, userExist.Role);
+        string accessToken
+            = _jwtTokenGenerator.GenerateAccessToken(userExist.Id, userExist.Email.Value, userExist.Role);
 
         RefreshTokenResult refreshTokenResult = _jwtTokenGenerator.GenerateRefreshToken();
         var refreshToken = new RefreshToken(refreshTokenResult.Token, userExist.Id, refreshTokenResult.ExpiresAt);

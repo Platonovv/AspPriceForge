@@ -15,7 +15,7 @@ internal sealed class EfUserRepository : IUserRepository
         _dbContext = dbContext;
     }
 
-    public Task<User?> GetUserByEmailAsync(string email, CancellationToken cancellationToken)
+    public Task<User?> GetUserByEmailAsync(Email email, CancellationToken cancellationToken)
         => _dbContext.Users.FirstOrDefaultAsync(x => x.Email == email, cancellationToken: cancellationToken);
 
     public Task<User?> GetUserByIdAsync(Guid id, CancellationToken cancellationToken)

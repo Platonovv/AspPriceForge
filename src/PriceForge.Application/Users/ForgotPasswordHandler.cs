@@ -44,9 +44,9 @@ public sealed class ForgotPasswordHandler : IRequestHandler<ForgotPasswordComman
 
     public async Task Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
     {
-        string userEmail = request.Email.ToLowerInvariant();
+        var userEmail = new Email(request.Email);
 
-        if (!await _emailRateLimiter.TryConsumeAsync($"reset-password:{userEmail}",
+        if (!await _emailRateLimiter.TryConsumeAsync($"reset-password:{userEmail.Value}",
                                                      _emailTokenSettings.EmailsPerWindowLimit,
                                                      TimeSpan.FromHours(_emailTokenSettings.WindowHour),
                                                      cancellationToken))
@@ -64,7 +64,7 @@ public sealed class ForgotPasswordHandler : IRequestHandler<ForgotPasswordComman
         GeneratedToken token = TokenGenerator.GenerateToken();
 
         string resetPasswordUrl = $"{_emailTokenSettings.FrontendBaseUrl}/reset-password?token={token.Token}";
-        var resetPasswordEvent = new ResetPasswordEvent(resetPasswordUrl, user.Email);
+        var resetPasswordEvent = new ResetPasswordEvent(resetPasswordUrl, user.Email.Value);
         string resetPassword = JsonSerializer.Serialize(resetPasswordEvent);
         var message = new OutboxMessage(IntegrationEventTypes.PasswordResetRequested, resetPassword);
 

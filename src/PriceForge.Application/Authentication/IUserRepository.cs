@@ -5,7 +5,7 @@ namespace PriceForge.Application.Authentication;
 
 public interface IUserRepository
 {
-    Task<User?> GetUserByEmailAsync(string email, CancellationToken cancellationToken);
+    Task<User?> GetUserByEmailAsync(Email email, CancellationToken cancellationToken);
     Task<User?> GetUserByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<CustomerTier?> GetTierByIdAsync(Guid id, CancellationToken cancellationToken);
     Task AddAsync(User user, CancellationToken cancellationToken);
