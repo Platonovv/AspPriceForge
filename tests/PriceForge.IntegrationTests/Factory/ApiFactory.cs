@@ -34,7 +34,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     private const string MinioUser = "minioadmin";
     private const string MinioPassword = "minioadmin";
     private const string BucketName = "product-images";
-    private const string MinioImage = "quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z";
+    private const string MinioImage = "ghcr.io/platonovv/minio:RELEASE.2025-09-07T16-13-09Z";
 
     private readonly MinioContainer _minioContainer = new MinioBuilder(MinioImage)
                                                       .WithUsername(MinioUser)
