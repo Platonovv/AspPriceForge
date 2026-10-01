@@ -12,7 +12,7 @@ using PriceForge.Infrastructure;
 using Serilog;
 using Serilog.Events;
 
-DotNetEnv.Env.TraversePath().Load();
+DotNetEnv.Env.TraversePath().NoClobber().Load();
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 

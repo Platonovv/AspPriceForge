@@ -5,6 +5,7 @@ using Amazon.S3.Model;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.SignalR.StackExchangeRedis;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
@@ -58,7 +59,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         Environment.SetEnvironmentVariable("ConnectionStrings__Postgres",
                                            "Host=localhost;Database=test;Username=test;Password=test");
-        Environment.SetEnvironmentVariable("ConnectionStrings__Redis", "localhost:6379,abortConnect=false");
+        Environment.SetEnvironmentVariable("ConnectionStrings__Redis", "localhost:1,abortConnect=false");
         Environment.SetEnvironmentVariable("ConnectionStrings__RabbitMq", "amqp://guest:guest@localhost:5672/");
         Environment.SetEnvironmentVariable("ConnectionStrings__Mongo", "mongodb://localhost:27017");
         Environment.SetEnvironmentVariable("ConnectionStrings__Elasticsearch", "http://localhost:9200");
@@ -108,6 +109,9 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
             services.RemoveAll<IConnectionMultiplexer>();
             services.AddSingleton<IConnectionMultiplexer>(_ => _redis);
+
+            services.Configure<RedisOptions>(options =>
+                options.Configuration = ConfigurationOptions.Parse(RedisConnectionString));
 
             services.AddSingleton(Options.Create(new StorageSettings
             {
