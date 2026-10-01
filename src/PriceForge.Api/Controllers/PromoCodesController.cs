@@ -11,6 +11,7 @@ namespace PriceForge.Api.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/v1/promocodes")]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 public class PromoCodesController : ControllerBase
 {
     private readonly ISender _sender;
@@ -27,6 +28,10 @@ public class PromoCodesController : ControllerBase
 
     [Authorize(Policy = "AdminOnly")]
     [HttpPost]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create([FromBody] CreatePromoCodeCommand createPromoCodeCommand,
                                             CancellationToken ct)
     {
@@ -35,7 +40,9 @@ public class PromoCodesController : ControllerBase
     }
 
     [HttpGet("quote")]
-    public async Task<IActionResult> QuotePromoCode(string code, Region region, CancellationToken ct)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<QuotePromoCodeDto>> QuotePromoCode(string code, Region region, CancellationToken ct)
     {
         Guid userId = User.GetUserId();
         CustomerTier tier = await _tierService.GetCustomerTierAsync(userId, ct);

@@ -12,6 +12,7 @@ namespace PriceForge.Api.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/v1/cart")]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 public class CartController : ControllerBase
 {
     private readonly ISender _sender;
@@ -27,7 +28,9 @@ public class CartController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult> GetAsync(Region region, CancellationToken ct)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<CartTotalQueryDto>> GetAsync(Region region, CancellationToken ct)
     {
         Guid userId = User.GetUserId();
         CustomerTier tier = await _tierService.GetCustomerTierAsync(userId, ct);
@@ -36,6 +39,9 @@ public class CartController : ControllerBase
     }
 
     [HttpPost("items")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AddItemToCart([FromBody] AddToCartRequest request, CancellationToken ct)
     {
         Guid userId = User.GetUserId();
@@ -44,6 +50,7 @@ public class CartController : ControllerBase
     }
 
     [HttpDelete("items/{productId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> RemoveItemFromCart([FromRoute] Guid productId, CancellationToken ct)
     {
         Guid userId = User.GetUserId();

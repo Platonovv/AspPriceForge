@@ -1,8 +1,8 @@
-﻿using System.Data;
+﻿using System.Data.Common;
 
 namespace PriceForge.Application.Common;
 
 public interface IDbConnectionFactory
 {
-    Task<IDbConnection> CreateOpenConnectionAsync(CancellationToken ct);
+    Task<DbConnection> CreateOpenConnectionAsync(CancellationToken ct);
 }

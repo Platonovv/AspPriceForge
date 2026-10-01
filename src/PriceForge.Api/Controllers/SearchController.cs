@@ -12,6 +12,7 @@ namespace PriceForge.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/search")]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 public class SearchController : ControllerBase
 {
     private readonly ISender _sender;
@@ -27,7 +28,9 @@ public class SearchController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Search([FromQuery] SearchRequest searchRequest,
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ProductSearchResultDto>> Search([FromQuery] SearchRequest searchRequest,
                                             CancellationToken cancellationToken)
     {
         var productSearchFilter = new ProductSearchFilter(searchRequest.Category,

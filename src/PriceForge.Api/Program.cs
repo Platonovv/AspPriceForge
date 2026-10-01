@@ -51,16 +51,27 @@ builder.Services
 
 builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddControllers();
+builder.Services.AddOpenApiDocument(settings =>
+{
+    settings.Title = "Price Forge API";
+    settings.Version = "v1";
+});
 
 WebApplication app = builder.Build();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseOpenApi();
+}
+
 app.UseMiddleware<CorrelationIdMiddleware>();
 
 app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
+app.UseStatusCodePages();
 app.UseRateLimiter();
 
 app.UseAuthentication();

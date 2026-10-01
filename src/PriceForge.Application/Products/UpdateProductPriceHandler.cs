@@ -37,6 +37,7 @@ public sealed class UpdateProductPriceHandler : IRequestHandler<UpdateProductPri
         }
 
         Currency currency = Enum.Parse<Currency>(request.Currency);
+
         var money = new Money(request.NewPrice, currency);
 
         product.ChangeBasePrice(money);

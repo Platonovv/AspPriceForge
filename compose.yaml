@@ -41,7 +41,7 @@
       redis:
         condition: service_started
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
       mongo:
         condition: service_started
 
@@ -82,6 +82,11 @@
       RABBITMQ_DEFAULT_PASS: ${DB_PASSWORD}
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   mongo:
     image: mongo:7

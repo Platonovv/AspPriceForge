@@ -12,6 +12,7 @@ namespace PriceForge.Api.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/v1/orders")]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 public class OrdersController : ControllerBase
 {
     private readonly ISender _sender;
@@ -28,6 +29,11 @@ public class OrdersController : ControllerBase
 
     [ServiceFilter(typeof(IdempotencyFilter))]
     [HttpPost]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create(string? promoCode, Region region, CancellationToken ct)
     {
         Guid userId = User.GetUserId();

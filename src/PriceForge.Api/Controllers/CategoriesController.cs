@@ -9,6 +9,7 @@ namespace PriceForge.Api.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/v1/categories")]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 public class CategoriesController : ControllerBase
 {
     private readonly ISender _sender;
@@ -22,6 +23,10 @@ public class CategoriesController : ControllerBase
 
     [Authorize(Policy = "AdminOnly")]
     [HttpPost]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryCommand command, CancellationToken ct)
     {
         Guid id = await _sender.Send(command, ct);
@@ -30,6 +35,11 @@ public class CategoriesController : ControllerBase
 
     [Authorize(Policy = "AdminOnly")]
     [HttpPost("{categoryId}/promotions")]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateCategoryPromotion(Guid categoryId,
                                                              [FromBody] CreateCategoryPromotionRequest request,
                                                              CancellationToken ct)

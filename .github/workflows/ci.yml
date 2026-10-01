@@ -29,8 +29,40 @@ jobs:
         run: dotnet test --no-build -c Release --verbosity normal
 
 
+  api-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve base revision
+        id: base
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="origin/${{ github.base_ref }}"
+          else
+            BASE="${{ github.event.before }}"
+          fi
+          if git cat-file -e "$BASE:openapi.json" 2>/dev/null; then
+            echo "ref=$BASE" >> "$GITHUB_OUTPUT"
+          else
+            echo "No openapi.json in $BASE, breaking-change check skipped"
+          fi
+
+      - name: Check for breaking changes
+        if: steps.base.outputs.ref != ''
+        uses: oasdiff/oasdiff-action/breaking@v0
+        with:
+          base: '${{ steps.base.outputs.ref }}:openapi.json'
+          revision: 'HEAD:openapi.json'
+          fail-on: ERR
+          review: false
+
+
   build-push-image:
-    needs: build-test
+    needs: [ build-test, api-contract ]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:

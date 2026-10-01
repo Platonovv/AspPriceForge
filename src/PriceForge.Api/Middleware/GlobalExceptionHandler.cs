@@ -7,6 +7,15 @@ namespace PriceForge.Api.Middleware;
 
 public sealed class GlobalExceptionHandler : IExceptionHandler
 {
+    private readonly IProblemDetailsService _problemDetailsService;
+
+    public GlobalExceptionHandler(IProblemDetailsService problemDetailsService)
+    {
+        ArgumentNullException.ThrowIfNull(problemDetailsService);
+
+        _problemDetailsService = problemDetailsService;
+    }
+
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext,
                                                 Exception exception,
                                                 CancellationToken cancellationToken)
@@ -27,11 +36,16 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
 
         var problemDetails = new ProblemDetails
         {
-            Status = status, Title = "An error occurred", Detail = exception.Message
+            Status = status, Detail = status == StatusCodes.Status500InternalServerError ? "An error occurred" : exception.Message
         };
 
         httpContext.Response.StatusCode = status;
-        await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
-        return true;
+
+        return await _problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+        {
+            HttpContext = httpContext,
+            ProblemDetails = problemDetails,
+            Exception = exception
+        });
     }
 }

@@ -42,7 +42,7 @@ public sealed class ConfirmEmailHandler : IRequestHandler<ConfirmEmailCommand>
 
         if (user == null)
         {
-            throw new UnauthorizedAccessException("Invalid credentials");
+            throw new BusinessRuleException("The link is invalid or expired; please request the email again.");
         }
 
         user.EmailConfirmation();

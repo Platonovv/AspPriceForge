@@ -54,7 +54,7 @@ public sealed class ResetPasswordHandler : IRequestHandler<ResetPasswordCommand>
 
         if (user == null)
         {
-            throw new UnauthorizedAccessException("Invalid credentials");
+            throw new BusinessRuleException("The link is invalid or expired; please request the email again.");
         }
 
         string hashPassword = _passwordHasher.Hash(request.NewPassword);

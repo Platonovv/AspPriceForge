@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
@@ -16,6 +16,8 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
     /// из принципала и работает с его данными (корзина, заказы, FK на users).
     /// </summary>
     public const string UserIdHeader = "X-Test-UserId";
+
+    public const string RoleHeader = "X-Test-Role";
 
     public TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,
                            ILoggerFactory logger,
@@ -37,11 +39,16 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
             ? v.ToString()
             : "test-user-id";
 
+        string role = Request.Headers.TryGetValue(RoleHeader, out Microsoft.Extensions.Primitives.StringValues r)
+                      && !string.IsNullOrWhiteSpace(r)
+            ? r.ToString()
+            : "Admin";
+
         Claim[] claims =
         [
             new Claim(ClaimTypes.NameIdentifier, userId),
             new Claim(ClaimTypes.Name, "Test Admin"),
-            new Claim(ClaimTypes.Role, "Admin")
+            new Claim(ClaimTypes.Role, role)
         ];
 
         var identity = new ClaimsIdentity(claims, SchemeName);

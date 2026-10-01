@@ -1,4 +1,6 @@
-﻿using MediatR;
+﻿using System.Globalization;
+using System.Text;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -8,7 +10,6 @@ using PriceForge.Api.Hubs;
 using PriceForge.Application.Common.Exceptions;
 using PriceForge.Application.Images;
 using PriceForge.Application.Products;
-using PriceForge.Application.Products.Images;
 using PriceForge.Application.Users;
 using PriceForge.Domain.Pricing;
 using PriceForge.Api.Common;
@@ -16,6 +17,7 @@ using PriceForge.Api.Common;
 namespace PriceForge.Api.Controllers;
 
 [Authorize]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 [ApiController]
 [Route("api/v1/products")]
 public class ProductsController : ControllerBase
@@ -39,6 +41,10 @@ public class ProductsController : ControllerBase
     [HttpPost("{id}/image")]
     [RequestFormLimits(MultipartBodyLengthLimit = 11 * 1024 * 1024)]
     [RequestSizeLimit(12 * 1024 * 1024)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> AssignImage(Guid id, IFormFile file, CancellationToken ct)
     {
         switch (file.Length)
@@ -56,6 +62,10 @@ public class ProductsController : ControllerBase
 
     [ServiceFilter(typeof(IdempotencyFilter))]
     [Authorize(Policy = "AdminOnly")]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateProductCommand command, CancellationToken ct)
     {
@@ -65,6 +75,10 @@ public class ProductsController : ControllerBase
 
     [Authorize(Policy = "AdminOnly")]
     [HttpPost("{productId}/categories")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> AssignCategory(Guid productId,
                                                     [FromBody] AssignCategoryRequest request,
                                                     CancellationToken ct)
@@ -75,14 +89,23 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ProductDto>> GetById(Guid id, CancellationToken ct)
     {
         ProductDto? result = await _sender.Send(new GetProductByIdQuery(id), ct);
         return result != null ? Ok(result) : NotFound();
     }
 
     [HttpGet("{id}/price")]
-    public async Task<IActionResult> GetProductPriceById(Guid id, int quantity, Region region, CancellationToken ct)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<MoneyDto>> GetProductPriceById(Guid id,
+                                                                  int quantity,
+                                                                  Region region,
+                                                                  CancellationToken ct)
     {
         Guid userId = User.GetUserId();
         CustomerTier tier = await _tierService.GetCustomerTierAsync(userId, ct);
@@ -90,21 +113,56 @@ public class ProductsController : ControllerBase
         return Ok(money);
     }
 
+    [Authorize(Policy = "AdminOnly")]
     [HttpGet("price-report")]
-    public async Task<IActionResult> GetProductPriceReport(CancellationToken ct)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<IReadOnlyList<ProductPriceIncreaseDto>>> GetProductPriceReport(CancellationToken ct)
     {
         IReadOnlyList<ProductPriceIncreaseDto> priceReportList = await _sender.Send(new GetPriceReportQuery(), ct);
         return Ok(priceReportList);
     }
 
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("price-report/export")]
+    [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK, "text/csv")]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task GetProductPriceReportExport(CancellationToken ct)
+    {
+        Response.ContentType = "text/csv; charset=utf-8";
+        Response.Headers.ContentDisposition = "attachment; filename=price-report.csv";
+
+        await using var writer = new StreamWriter(Response.Body,
+                                                  new UTF8Encoding(encoderShouldEmitUTF8Identifier: true),
+                                                  leaveOpen: true);
+
+        IAsyncEnumerable<ProductPriceIncreaseDto> priceReportList
+            = _sender.CreateStream(new GetStreamPriceReportQuery(), ct);
+
+        await writer.WriteLineAsync("Name,Summary");
+
+        await foreach (ProductPriceIncreaseDto row in priceReportList)
+        {
+            await writer.WriteLineAsync($"{row.Name.EscapeCsv()},{row.Summary.ToString(CultureInfo.InvariantCulture)}");
+        }
+    }
+
     [HttpGet("{id}/image")]
-    public async Task<IActionResult> GetImageUrl(Guid id, CancellationToken ct)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ImageDto>> GetImageUrl(Guid id, CancellationToken ct)
     {
         ImageDto imageDto = await _sender.Send(new GetImageQuery(id), ct);
         return Ok(imageDto);
     }
 
+    [Authorize(Policy = "AdminOnly")]
     [HttpPut("{id}/price")]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdateProductPrice(Guid id,
                                                         [FromBody] UpdateProductPriceRequest request,
                                                         CancellationToken ct)

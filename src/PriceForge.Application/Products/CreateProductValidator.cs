@@ -12,7 +12,7 @@ public sealed class CreateProductValidator : AbstractValidator<CreateProductComm
         RuleFor(x => x.Price).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Currency)
             .NotEmpty()
-            .Must(c => Enum.TryParse<Currency>(c, out _))
+            .IsEnumName(typeof(Currency))
             .WithMessage("Currency must be a valid code (USD, RUB, EUR...)");
     }
 }

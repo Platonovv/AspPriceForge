@@ -9,6 +9,9 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
+using PriceForge.Infrastructure.Persistence.Factory;
+using PriceForge.Application.Common;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -33,7 +36,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     private const string BucketName = "product-images";
     private const string MinioImage = "quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z";
 
-    private readonly MinioContainer _minioContainer = new MinioBuilder().WithImage(MinioImage)
+    private readonly MinioContainer _minioContainer = new MinioBuilder(MinioImage)
                                                       .WithUsername(MinioUser)
                                                       .WithPassword(MinioPassword)
                                                       .Build();
@@ -80,6 +83,15 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         {
             services.RemoveAll<DbContextOptions<AppDbContext>>();
             services.AddDbContext<AppDbContext>(options => options.UseNpgsql(ConnectionString));
+
+            services.RemoveAll<IDbConnectionFactory>();
+            services.AddSingleton<IDbConnectionFactory>(_ => new NpgsqlConnectionFactory(
+                                                            new ConfigurationBuilder()
+                                                                .AddInMemoryCollection(new Dictionary<string, string?>
+                                                                {
+                                                                    ["ConnectionStrings:Postgres"] = ConnectionString
+                                                                })
+                                                                .Build()));
 
             if (UseTestAuth)
             {

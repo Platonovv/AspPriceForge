@@ -24,6 +24,9 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Register([FromBody] RegisterCommand command, CancellationToken ct)
     {
         Guid id = await _sender.Send(command, ct);
@@ -32,14 +35,21 @@ public class AuthController : ControllerBase
 
     [EnableRateLimiting("EnterLogin")]
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginCommand command, CancellationToken ct)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult<LoginResult>> Login([FromBody] LoginCommand command, CancellationToken ct)
     {
         LoginResult result = await _sender.Send(command, ct);
         return Ok(result);
     }
 
     [HttpPost("refresh")]
-    public async Task<IActionResult> Refresh([FromBody] RefreshCommand command, CancellationToken ct)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<LoginResult>> Refresh([FromBody] RefreshCommand command, CancellationToken ct)
     {
         LoginResult result = await _sender.Send(command, ct);
         return Ok(result);
@@ -47,7 +57,9 @@ public class AuthController : ControllerBase
 
     [Authorize]
     [HttpPost("logout")]
-    public async Task<IActionResult> Logout(CancellationToken ct)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<LogoutResult>> Logout(CancellationToken ct)
     {
         string jti = User.FindFirstValue(JwtRegisteredClaimNames.Jti)!;
         Guid userId = User.GetUserId();
@@ -62,7 +74,9 @@ public class AuthController : ControllerBase
 
     [Authorize]
     [HttpGet("me")]
-    public async Task<IActionResult> Me(CancellationToken ct)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<MeDto>> Me(CancellationToken ct)
     {
         Guid userId = User.GetUserId();
         MeDto me = await _sender.Send(new GetMeQuery(userId), ct);

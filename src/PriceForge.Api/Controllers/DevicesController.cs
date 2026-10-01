@@ -18,6 +18,8 @@ public class DevicesController : ControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create([FromBody] CreateDeviceTokenCommand command, CancellationToken ct)
     {
         await _sender.Send(command, ct);
