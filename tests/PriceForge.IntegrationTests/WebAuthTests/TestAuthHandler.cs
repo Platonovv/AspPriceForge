@@ -19,6 +19,8 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
 
     public const string RoleHeader = "X-Test-Role";
 
+    public const string DefaultUserId = "a0000000-0000-0000-0000-000000000001";
+
     public TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,
                            ILoggerFactory logger,
                            UrlEncoder encoder) : base(options, logger, encoder)
@@ -37,7 +39,7 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
         string userId = Request.Headers.TryGetValue(UserIdHeader, out Microsoft.Extensions.Primitives.StringValues v)
                         && !string.IsNullOrWhiteSpace(v)
             ? v.ToString()
-            : "test-user-id";
+            : DefaultUserId;
 
         string role = Request.Headers.TryGetValue(RoleHeader, out Microsoft.Extensions.Primitives.StringValues r)
                       && !string.IsNullOrWhiteSpace(r)
