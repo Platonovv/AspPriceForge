@@ -2,6 +2,7 @@
 using PriceForge.Application.Cache;
 using PriceForge.Application.Common.Exceptions;
 using PriceForge.Application.Products;
+using PriceForge.Application.Transactions;
 using PriceForge.Domain.Products;
 using PriceForge.Domain.Promotions;
 
@@ -9,19 +10,27 @@ namespace PriceForge.Application.Promotions;
 
 public class CreatePromotionHandler : IRequestHandler<CreatePromotionCommand, Guid>
 {
-    private readonly IPromotionRepository _promotionRepository;
-    private readonly IProductRepository _productRepository;
     private readonly ICacheVersion _cacheVersion;
+    private readonly ITransactionRunner _runner;
+    private readonly IProductRepository _productRepository;
+    private readonly IPromotionRepository _promotionRepository;
+    private readonly PublicPriceRecalculator _priceRecalculator;
 
     public CreatePromotionHandler(ICacheVersion cacheVersion,
                                   IPromotionRepository promotionRepository,
-                                  IProductRepository productRepository)
+                                  IProductRepository productRepository,
+                                  ITransactionRunner runner,
+                                  PublicPriceRecalculator priceRecalculator)
     {
+        ArgumentNullException.ThrowIfNull(runner);
         ArgumentNullException.ThrowIfNull(cacheVersion);
-        ArgumentNullException.ThrowIfNull(promotionRepository);
+        ArgumentNullException.ThrowIfNull(priceRecalculator);
         ArgumentNullException.ThrowIfNull(productRepository);
+        ArgumentNullException.ThrowIfNull(promotionRepository);
 
+        _runner = runner;
         _cacheVersion = cacheVersion;
+        _priceRecalculator = priceRecalculator;
         _productRepository = productRepository;
         _promotionRepository = promotionRepository;
     }
@@ -45,8 +54,15 @@ public class CreatePromotionHandler : IRequestHandler<CreatePromotionCommand, Gu
 
         var newPromotion = new Promotion(request.ProductId, request.Percent, request.StartAt, request.EndAt);
 
-        await _promotionRepository.AddAsync(newPromotion, cancellationToken);
-        await _promotionRepository.SaveChangesAsync(cancellationToken);
+        await _runner.RunAsync(async () =>
+                               {
+                                   await _promotionRepository.AddAsync(newPromotion, cancellationToken);
+                                   await _promotionRepository.SaveChangesAsync(cancellationToken);
+                                   await _priceRecalculator.RecalculateAsync([request.ProductId], cancellationToken);
+                                   await _promotionRepository.SaveChangesAsync(cancellationToken);
+                               },
+                               cancellationToken);
+
         await _cacheVersion.BumpAsync(cancellationToken);
 
         return newPromotion.Id;

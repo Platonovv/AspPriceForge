@@ -10,21 +10,25 @@ namespace PriceForge.Application.Products;
 
 public sealed class UpdateProductPriceHandler : IRequestHandler<UpdateProductPriceCommand>
 {
+    private readonly PublicPriceRecalculator _priceRecalculator;
     private readonly IProductRepository _productRepository;
     private readonly IOutboxRepository _outboxRepository;
     private readonly ICacheVersion _cacheVersion;
 
     public UpdateProductPriceHandler(ICacheVersion cacheVersion,
                                      IProductRepository productRepository,
-                                     IOutboxRepository outboxRepository)
+                                     IOutboxRepository outboxRepository,
+                                     PublicPriceRecalculator priceRecalculator)
     {
         ArgumentNullException.ThrowIfNull(cacheVersion);
         ArgumentNullException.ThrowIfNull(productRepository);
         ArgumentNullException.ThrowIfNull(outboxRepository);
+        ArgumentNullException.ThrowIfNull(priceRecalculator);
 
         _cacheVersion = cacheVersion;
         _outboxRepository = outboxRepository;
         _productRepository = productRepository;
+        _priceRecalculator = priceRecalculator;
     }
 
     public async Task Handle(UpdateProductPriceCommand request, CancellationToken cancellationToken)
@@ -41,6 +45,8 @@ public sealed class UpdateProductPriceHandler : IRequestHandler<UpdateProductPri
         var money = new Money(request.NewPrice, currency);
 
         product.ChangeBasePrice(money);
+
+        await _priceRecalculator.RecalculateAsync([product.Id], cancellationToken);
 
         var productPriceChangedEvent = new ProductPriceChangedEvent(Guid.NewGuid(),
                                                                     product.Id,

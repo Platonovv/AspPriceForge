@@ -1,5 +1,4 @@
-﻿using PriceForge.Application.Carts;
-using PriceForge.Domain.Categories;
+﻿using PriceForge.Domain.Categories;
 using PriceForge.Application.Common;
 
 namespace PriceForge.Application.Categories;
@@ -13,6 +12,8 @@ public interface ICategoryPromotionRepository
                                                                             CancellationToken ct);
 
     Task<List<ProductCategoryPromotion>> GetActiveForProductsAsync(List<Guid> ids, DateTime at, CancellationToken ct);
+
+    Task<List<Guid>> GetProductIdsWithBoundaryInWindowAsync(DateTime from, DateTime to, CancellationToken ct);
 
     Task<int> SaveChangesAsync(CancellationToken ct);
     Task<bool> HasOverlappingAsync(Guid categoryId, DateTime startAt, DateTime endAt, CancellationToken ct);

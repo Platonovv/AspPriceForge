@@ -4,16 +4,9 @@ namespace PriceForge.Domain.Pricing.Strategies;
 
 public sealed class VipDiscountStrategy : IPricingStrategy
 {
-    private const decimal VipDiscount = 0.15m;
-
     public Money CalculatePrice(Money currentPrice, PricingContext context)
     {
-        if (context.Tier != CustomerTier.Vip)
-        {
-            return currentPrice;
-        }
-
-        decimal discounted = currentPrice.Amount * (1m - VipDiscount);
+        decimal discounted = currentPrice.Amount * TierPricing.GetMultiplier(context.Tier);
 
         return new Money(discounted, currentPrice.Currency);
     }

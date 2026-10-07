@@ -26,6 +26,13 @@ internal sealed class EfPromotionRepository : IPromotionRepository
                      .FirstOrDefaultAsync(x => x.ProductId == productId && x.StartAt <= at && at <= x.EndAt,
                                           cancellationToken: ct);
 
+    public Task<List<Guid>> GetProductIdsWithBoundaryInWindowAsync(DateTime from, DateTime to, CancellationToken ct)
+        => _dbContext.Promotions
+                     .Where(p => (p.StartAt > from && p.StartAt <= to) || (p.EndAt > from && p.EndAt <= to))
+                     .Select(x => x.ProductId)
+                     .Distinct()
+                     .ToListAsync(ct);
+
     public Task<List<Promotion>> GetActiveForProductsAsync(List<Guid> ids, DateTime at, CancellationToken ct)
         => _dbContext.Promotions
                      .Where(p => ids.Contains(p.ProductId) && p.StartAt <= at && at <= p.EndAt)

@@ -1,9 +1,11 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PriceForge.Application.DeviceTokens;
 
 namespace PriceForge.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/v1/devices")]
 public class DevicesController : ControllerBase
@@ -19,6 +21,7 @@ public class DevicesController : ControllerBase
 
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create([FromBody] CreateDeviceTokenCommand command, CancellationToken ct)
     {

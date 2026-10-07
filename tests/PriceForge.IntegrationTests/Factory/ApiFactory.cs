@@ -60,9 +60,9 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         Environment.SetEnvironmentVariable("ConnectionStrings__Postgres",
                                            "Host=localhost;Database=test;Username=test;Password=test");
         Environment.SetEnvironmentVariable("ConnectionStrings__Redis", "localhost:1,abortConnect=false");
-        Environment.SetEnvironmentVariable("ConnectionStrings__RabbitMq", "amqp://guest:guest@localhost:5672/");
-        Environment.SetEnvironmentVariable("ConnectionStrings__Mongo", "mongodb://localhost:27017");
-        Environment.SetEnvironmentVariable("ConnectionStrings__Elasticsearch", "http://localhost:9200");
+        Environment.SetEnvironmentVariable("ConnectionStrings__RabbitMq", "amqp://guest:guest@localhost:1/");
+        Environment.SetEnvironmentVariable("ConnectionStrings__Mongo", "mongodb://localhost:1");
+        Environment.SetEnvironmentVariable("ConnectionStrings__Elasticsearch", "http://localhost:1");
         Environment.SetEnvironmentVariable("Jwt__Secret", "test_secret_key_at_least_32_chars_long_1234567890");
         Environment.SetEnvironmentVariable("Jwt__Issuer", "PriceForge");
         Environment.SetEnvironmentVariable("Jwt__Audience", "PriceForgeUsers");

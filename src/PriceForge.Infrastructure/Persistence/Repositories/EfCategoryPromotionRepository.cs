@@ -44,6 +44,17 @@ public class EfCategoryPromotionRepository : ICategoryPromotionRepository
                            .AsNoTracking()
                            .ToListAsync(ct);
 
+    public Task<List<Guid>> GetProductIdsWithBoundaryInWindowAsync(DateTime from, DateTime to, CancellationToken ct)
+        => _dbContext.ProductCategories
+                     .Join(_dbContext.CategoryPromotions,
+                           pc => pc.CategoryId,
+                           cp => cp.CategoryId,
+                           (pc, cp) => new {pc.ProductId, cp})
+                     .Where(x => (x.cp.StartAt > from && x.cp.StartAt <= to) || (x.cp.EndAt > from && x.cp.EndAt <= to))
+                     .Select(x => x.ProductId)
+                     .Distinct()
+                     .ToListAsync(ct);
+
     public Task<bool> HasOverlappingAsync(Guid categoryId, DateTime startAt, DateTime endAt, CancellationToken ct)
         => _dbContext.CategoryPromotions.AnyAsync(
             x => x.CategoryId == categoryId && x.StartAt < endAt && startAt < x.EndAt,

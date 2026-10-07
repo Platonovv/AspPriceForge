@@ -568,6 +568,16 @@
           "204": {
             "description": ""
           },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "400": {
             "description": "",
             "content": {

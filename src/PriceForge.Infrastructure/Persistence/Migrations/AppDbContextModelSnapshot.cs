@@ -227,6 +227,10 @@ namespace PriceForge.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
 
+                    b.Property<decimal>("PublicPrice")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("public_price");
+
                     b.Property<string>("Sku")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -248,6 +252,8 @@ namespace PriceForge.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Sku")
                         .IsUnique();
+
+                    b.HasIndex("PublicPrice", "Id");
 
                     b.ToTable("products", (string)null);
                 });

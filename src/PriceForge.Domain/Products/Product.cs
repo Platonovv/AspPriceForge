@@ -1,5 +1,6 @@
 ﻿using PriceForge.Application.Common.Exceptions;
 using PriceForge.Domain.Common;
+using PriceForge.Domain.Pricing;
 
 namespace PriceForge.Domain.Products;
 
@@ -9,6 +10,7 @@ public sealed class Product
     public Sku Sku { get; private set; } = null!;
     public string Name { get; private set; } = null!;
     public Money BasePrice { get; private set; } = null!;
+    public decimal PublicPrice { get; private set; }
 
     private readonly List<ProductComponent> _components = new();
 
@@ -38,6 +40,7 @@ public sealed class Product
         Sku = sku;
         Name = name;
         BasePrice = basePrice;
+        PublicPrice = basePrice.Amount;
     }
 
     public override bool Equals(object? obj) => obj is Product product && Id == product.Id;
@@ -59,6 +62,7 @@ public sealed class Product
     {
         ArgumentNullException.ThrowIfNull(newPrice);
         BasePrice = newPrice;
+        UpdatePublicPrice(newPrice.Amount);
     }
 
     public void ChangeSku(Sku newSku)
@@ -101,6 +105,23 @@ public sealed class Product
         }
 
         component.ChangeQuantity(newQuantity);
+    }
+
+    public void UpdatePublicPrice(decimal amount)
+    {
+        amount = PriceRounding.RoundToCents(amount);
+
+        if (amount < 0)
+        {
+            throw new ArgumentException("Amount cannot be negative", nameof(amount));
+        }
+
+        if (amount > BasePrice.Amount)
+        {
+            throw new ArgumentException("Amount must be less than or equal to BasePrice", nameof(amount));
+        }
+
+        PublicPrice = amount;
     }
 
     private static bool IsAllowedName(string name)

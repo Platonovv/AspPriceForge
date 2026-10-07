@@ -8,6 +8,7 @@ public interface ICategoryRepository
     Task<Category?> GetByIdAsync(Guid id, CancellationToken ct);
     Task<bool> ExistsAsync(string name, CancellationToken ct);
     Task<bool> ExistsBindingAsync(Guid productId, Guid categoryId, CancellationToken ct);
+    Task<List<Guid>> GetProductIdsAsync(Guid categoryId, CancellationToken ct);
 
     // Запись
     Task AddAsync(Category category, CancellationToken ct);

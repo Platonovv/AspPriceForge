@@ -10,6 +10,7 @@ public interface IProductRepository
     Task<Product?> GetByIdForUpdateAsync(Guid id, CancellationToken ct);
     Task<Product?> GetBySkuAsync(Sku sku, CancellationToken ct);
     Task<List<Product>> GetByIdsAsync(List<Guid> ids, CancellationToken ct);
+    Task<List<Product>> GetByIdsForUpdateAsync(List<Guid> ids, CancellationToken ct);
 
     Task<(IReadOnlyList<Product> Items, int Total)> GetProductsByFilterAsync(
         string? searchString,
@@ -21,6 +22,7 @@ public interface IProductRepository
     // Запись
     Task AddAsync(Product product, CancellationToken ct);
     void Remove(Product product);
+    void ClearTracking();
 
     // Сохранение всех накопленных изменений (UoW commit)
     Task<int> SaveChangesAsync(CancellationToken ct);

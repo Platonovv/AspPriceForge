@@ -54,7 +54,7 @@
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: priceforge
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -68,15 +68,15 @@
     container_name: priceforge-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: priceforge-rabbitmq
     restart: unless-stopped
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: priceforge
       RABBITMQ_DEFAULT_PASS: ${DB_PASSWORD}
@@ -93,7 +93,7 @@
     container_name: priceforge-mongo
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: priceforge
       MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
@@ -106,7 +106,7 @@
     container_name: priceforge-elasticsearch
     restart: unless-stopped
     ports:
-      - '9200:9200'
+      - '127.0.0.1:9200:9200'
     environment:
       discovery.type: single-node
       xpack.security.enabled: false
@@ -117,7 +117,7 @@
     container_name: priceforge-kibana
     restart: unless-stopped
     ports:
-      - '5601:5601'
+      - '127.0.0.1:5601:5601'
     environment:
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
 
@@ -126,7 +126,7 @@
     container_name: priceforge-jaeger
     restart: unless-stopped
     ports:
-      - '16686:16686'
+      - '127.0.0.1:16686:16686'
     environment:
       COLLECTOR_OTLP_ENABLED: true
 
@@ -135,9 +135,9 @@
     container_name: priceforge-otel-collector
     restart: unless-stopped
     ports:
-      - '4317:4317'
-      - '4318:4318'
-      - '8889:8889'
+      - '127.0.0.1:4317:4317'
+      - '127.0.0.1:4318:4318'
+      - '127.0.0.1:8889:8889'
     volumes:
       - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
     depends_on: [ jaeger ]
@@ -147,7 +147,7 @@
     container_name: priceforge-prometheus
     restart: unless-stopped
     ports:
-      - '9090:9090'
+      - '127.0.0.1:9090:9090'
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     depends_on: [ otel-collector ]
@@ -157,7 +157,7 @@
     container_name: priceforge-grafana
     restart: unless-stopped
     ports:
-      - '3000:3000'
+      - '127.0.0.1:3000:3000'
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
     depends_on: [ prometheus ]
@@ -172,7 +172,7 @@
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     ports:
       - '9000:9000'
-      - '9001:9001'
+      - '127.0.0.1:9011:9001'
     volumes:
       - minio-data:/data
 

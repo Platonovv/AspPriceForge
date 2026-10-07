@@ -23,6 +23,9 @@ public class EfCategoryRepository : ICategoryRepository
     public Task<bool> ExistsBindingAsync(Guid productId, Guid categoryId, CancellationToken ct)
         => _dbContext.ProductCategories.AnyAsync(p => p.ProductId == productId && p.CategoryId == categoryId, ct);
 
+    public Task<List<Guid>> GetProductIdsAsync(Guid categoryId, CancellationToken ct)
+        => _dbContext.ProductCategories.Where(x => x.CategoryId == categoryId).Select(x => x.ProductId).ToListAsync(ct);
+
     public async Task AddAsync(Category category, CancellationToken ct)
         => await _dbContext.Categories.AddAsync(category, ct);
 

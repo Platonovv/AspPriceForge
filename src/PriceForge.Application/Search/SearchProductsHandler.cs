@@ -1,7 +1,6 @@
 ﻿using MediatR;
-using PriceForge.Application.Common;
 using PriceForge.Application.Products;
-using PriceForge.Domain.Common;
+using PriceForge.Domain.Pricing;
 using PriceForge.Domain.Products;
 
 namespace PriceForge.Application.Search;
@@ -9,43 +8,34 @@ namespace PriceForge.Application.Search;
 public sealed class SearchProductsHandler : IRequestHandler<SearchProductsQuery, ProductSearchResultDto>
 {
     private readonly IProductRepository _productRepository;
-    private readonly ProductPricingService _productPricingService;
 
-    public SearchProductsHandler(IProductRepository productRepository, ProductPricingService productPricingService)
+    public SearchProductsHandler(IProductRepository productRepository)
     {
         ArgumentNullException.ThrowIfNull(productRepository);
-        ArgumentNullException.ThrowIfNull(productPricingService);
 
         _productRepository = productRepository;
-        _productPricingService = productPricingService;
     }
 
     public async Task<ProductSearchResultDto> Handle(SearchProductsQuery request, CancellationToken cancellationToken)
     {
+        ProductSearchFilter productSearchFilter = request.ProductSearchFilter with
+        {
+            MaxPrice = request.ProductSearchFilter.MaxPrice / TierPricing.GetMultiplier(request.Tier)
+        };
+
         (IReadOnlyList<Product> Items, int Total) productsByFilter
             = await _productRepository.GetProductsByFilterAsync(request.SearchString,
-                                                                request.ProductSearchFilter,
+                                                                productSearchFilter,
                                                                 cancellationToken);
 
-        var pricingItems = productsByFilter.Items
-                                           .Select(product => new PricingItem(product.Id, product.BasePrice, 1))
-                                           .ToList();
-
-        IReadOnlyDictionary<Guid, Money> productPricing
-            = await _productPricingService.CalculateProductPricingAsync(
-                  pricingItems,
-                  request.Tier,
-                  request.Region,
-                  cancellationToken);
-
-        var searchProducts = new List<SearchProductDto>();
-
-        foreach (Product product in productsByFilter.Items)
-        {
-            Money money = productPricing[product.Id];
-
-            searchProducts.Add(new SearchProductDto(product.Name, product.Sku.Value, money.Amount));
-        }
+        var searchProducts = productsByFilter.Items
+                                             .Select(product =>
+                                             {
+                                                 decimal price = PriceRounding.RoundToCents(product.PublicPrice
+                                                     * TierPricing.GetMultiplier(request.Tier));
+                                                 return new SearchProductDto(product.Name, product.Sku.Value, price);
+                                             })
+                                             .ToList();
 
         return new ProductSearchResultDto(searchProducts, productsByFilter.Total);
     }

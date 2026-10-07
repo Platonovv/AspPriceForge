@@ -28,7 +28,7 @@ public sealed class ImageCleanupService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var timer = new PeriodicTimer(TimeSpan.FromMinutes(_settings.PeriodMinutes));
+        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(_settings.PeriodMinutes));
 
         _logger.LogInformation("Starting image cleanup service {Time}", DateTime.UtcNow);
 

@@ -8,6 +8,7 @@ using PriceForge.Application.Caching;
 using PriceForge.Application.Carts;
 using PriceForge.Application.Common;
 using PriceForge.Application.Images;
+using PriceForge.Application.Products;
 using PriceForge.Application.Users;
 using PriceForge.Application.Users.UserTokens;
 using PriceForge.Domain.Pricing;
@@ -35,12 +36,18 @@ public static class ApplicationDependencyInjection
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
+        services.AddOptions<PublicPriceRefresherSettings>()
+                .Bind(configuration.GetSection("PublicPriceRefresherSettings"))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
         services.AddOptions<EmailTokenSettings>()
                 .Bind(configuration.GetSection("EmailSettings"))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
         services.AddHostedService<RefreshTokenCleanupService>();
+        services.AddHostedService<PublicPriceRefresherService>();
         services.AddHostedService<OutboxDispatcher>();
         services.AddHostedService<ImageCleanupService>();
 
@@ -49,9 +56,11 @@ public static class ApplicationDependencyInjection
         services.AddScoped<PriceCalculator>();
         services.AddScoped<CartPricingService>();
         services.AddScoped<ProductPricingService>();
+        services.AddScoped<PublicPriceRecalculator>();
         services.AddScoped<TierService>();
         services.AddScoped<ICacheVersion, CacheVersion>();
         services.AddScoped<ImageCleaner>();
+        services.AddScoped<PublicPriceRefresher>();
 
         return services;
     }

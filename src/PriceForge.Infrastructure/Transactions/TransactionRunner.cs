@@ -26,4 +26,15 @@ public class TransactionRunner : ITransactionRunner
 
         return result;
     }
+
+    public async Task RunAsync(Func<Task> action, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        await using IDbContextTransaction transaction = await _dbContext.Database.BeginTransactionAsync(ct);
+
+        await action.Invoke();
+
+        await transaction.CommitAsync(ct);
+    }
 }

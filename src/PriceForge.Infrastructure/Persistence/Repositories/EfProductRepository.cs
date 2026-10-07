@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Npgsql;
 using PriceForge.Application.Common.Exceptions;
 using PriceForge.Application.Products;
@@ -26,6 +27,9 @@ internal sealed class EfProductRepository : IProductRepository
     public Task<Product?> GetBySkuAsync(Sku sku, CancellationToken ct)
         => _dbContext.Products.Include(x => x.Components).AsNoTracking().FirstOrDefaultAsync(p => p.Sku == sku, ct);
 
+    public Task<List<Product>> GetByIdsForUpdateAsync(List<Guid> ids, CancellationToken ct)
+        => _dbContext.Products.Where(p => ids.Contains(p.Id)).ToListAsync(ct);
+
     public Task<List<Product>> GetByIdsAsync(List<Guid> ids, CancellationToken ct)
         => _dbContext.Products.Where(p => ids.Contains(p.Id)).AsNoTracking().ToListAsync(ct);
 
@@ -52,12 +56,12 @@ internal sealed class EfProductRepository : IProductRepository
 
         if (filter.MaxPrice is > 0)
         {
-            query = query.Where(p => p.BasePrice.Amount <= filter.MaxPrice);
+            query = query.Where(p => p.PublicPrice <= filter.MaxPrice);
         }
 
         query = filter.Descending
-                    ? query.OrderByDescending(p => p.BasePrice.Amount).ThenBy(p => p.Id)
-                    : query.OrderBy(p => p.BasePrice.Amount).ThenBy(p => p.Id);
+                    ? query.OrderByDescending(p => p.PublicPrice).ThenBy(p => p.Id)
+                    : query.OrderBy(p => p.PublicPrice).ThenBy(p => p.Id);
 
         int total = await query.CountAsync(ct);
 
@@ -72,6 +76,7 @@ internal sealed class EfProductRepository : IProductRepository
         => await _dbContext.Products.AddAsync(product, ct);
 
     public void Remove(Product product) => _dbContext.Products.Remove(product);
+    public void ClearTracking() => _dbContext.ChangeTracker.Clear();
 
     public async Task<int> SaveChangesAsync(CancellationToken ct)
     {

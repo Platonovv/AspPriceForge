@@ -1,5 +1,4 @@
-﻿using PriceForge.Application.Carts;
-using PriceForge.Application.Categories;
+﻿using PriceForge.Application.Categories;
 using PriceForge.Application.Promotions;
 using PriceForge.Domain.Categories;
 using PriceForge.Domain.Common;

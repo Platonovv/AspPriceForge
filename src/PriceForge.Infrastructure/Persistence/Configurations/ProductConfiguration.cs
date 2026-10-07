@@ -50,6 +50,13 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
                                  .IsRequired();
                         });
 
+        // 6. Public Price
+        builder.Property(p => p.PublicPrice)
+               .HasColumnName("public_price")
+               .HasColumnType("numeric(18,2)"); // decimal с точностью 18 разрядов, 2 после запятой
+
+        builder.HasIndex(p => new {p.PublicPrice, p.Id});
+
         // Навигация: Product → его прямые компоненты
         builder.HasMany<ProductComponent>(nameof(Product.Components))
                .WithOne()
