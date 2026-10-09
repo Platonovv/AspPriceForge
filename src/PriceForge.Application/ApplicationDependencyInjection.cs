@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using PriceForge.Application.Authentication;
 using PriceForge.Application.BackgroundServices;
 using PriceForge.Application.Behaviors;
 using PriceForge.Application.Cache;
@@ -43,6 +44,11 @@ public static class ApplicationDependencyInjection
 
         services.AddOptions<EmailTokenSettings>()
                 .Bind(configuration.GetSection("EmailSettings"))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
+        services.AddOptions<LoginAttemptSettings>()
+                .Bind(configuration.GetSection("LoginAttemptSettings"))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 

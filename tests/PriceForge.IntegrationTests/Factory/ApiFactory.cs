@@ -50,6 +50,8 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     protected virtual bool UseTestAuth => true;
 
+    public const string TrustedProxyIp = "10.99.0.1";
+
     public string ConnectionString => _container.GetConnectionString();
 
     public string RedisConnectionString => _redisContainer.GetConnectionString();
@@ -75,6 +77,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         Environment.SetEnvironmentVariable("Smtp__From", "test@example.com");
         Environment.SetEnvironmentVariable("Smtp__To", "test@example.com");
         Environment.SetEnvironmentVariable("EmailSettings__FrontendBaseUrl", "http://localhost:3000");
+        Environment.SetEnvironmentVariable("ForwardedHeaders__KnownProxies__0", TrustedProxyIp);
 
     }
 
@@ -82,6 +85,8 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         builder.ConfigureTestServices(services =>
         {
+            services.AddSingleton<IStartupFilter, TestRemoteIpStartupFilter>();
+
             services.RemoveAll<DbContextOptions<AppDbContext>>();
             services.AddDbContext<AppDbContext>(options => options.UseNpgsql(ConnectionString));
 

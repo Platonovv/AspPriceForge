@@ -16,8 +16,13 @@ internal sealed class EmailRateLimiter : IEmailRateLimiter
         _database = multiplexer.GetDatabase();
     }
 
-    public async Task<bool> TryConsumeAsync(string key, int limit, TimeSpan window, CancellationToken cancellationToken)
+    public async Task<bool> TryConsumeAsync(string key,
+                                            int limit,
+                                            TimeSpan window,
+                                            CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         string redisKey = KeyPrefix + key;
 
         long attempts = await _database.StringIncrementAsync(redisKey);

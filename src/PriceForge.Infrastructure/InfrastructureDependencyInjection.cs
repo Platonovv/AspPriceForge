@@ -121,6 +121,7 @@ public static class InfrastructureDependencyInjection
         });
         services.AddSingleton<IImageStorage, ImageStorage>();
         services.AddSingleton<IEmailRateLimiter, EmailRateLimiter>();
+        services.AddSingleton<ILoginAttemptLimiter, LoginAttemptLimiter>();
 
         services.AddScoped<IDapperQuery, DapperQuery>();
 
