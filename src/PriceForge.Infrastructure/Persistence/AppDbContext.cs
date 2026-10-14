@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PriceForge.Application.Brokers;
+using PriceForge.Application.Common.Exceptions;
 using PriceForge.Domain.Categories;
 using PriceForge.Domain.Images;
 using PriceForge.Domain.Orders;
@@ -75,5 +76,18 @@ public sealed class AppDbContext : DbContext
 
         //6
         return result;
+    }
+
+    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
+                                                     CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new ConflictException("Product was modified by another request. Reload and retry");
+        }
     }
 }
