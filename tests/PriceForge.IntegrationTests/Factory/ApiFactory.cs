@@ -51,6 +51,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     protected virtual bool UseTestAuth => true;
 
     public const string TrustedProxyIp = "10.99.0.1";
+    public const string AllowedGameOrigin = "http://localhost:8000";
 
     public string ConnectionString => _container.GetConnectionString();
 
@@ -78,6 +79,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         Environment.SetEnvironmentVariable("Smtp__To", "test@example.com");
         Environment.SetEnvironmentVariable("EmailSettings__FrontendBaseUrl", "http://localhost:3000");
         Environment.SetEnvironmentVariable("ForwardedHeaders__KnownProxies__0", TrustedProxyIp);
+        Environment.SetEnvironmentVariable("Cors__AllowedOrigins__0", AllowedGameOrigin);
 
     }
 

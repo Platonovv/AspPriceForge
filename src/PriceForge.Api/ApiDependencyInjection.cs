@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using PriceForge.Api.Authentication;
 using PriceForge.Api.Common;
@@ -12,12 +11,26 @@ namespace PriceForge.Api;
 
 public static class ApiDependencyInjection
 {
+    public const string Cors_Name = "CORSNAME";
+
     public static IServiceCollection AddPresentation(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<LoginRateLimitSettings>()
                 .Bind(configuration.GetSection("LoginRateLimit"))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
+
+        CorsSettings corsSettings = configuration.GetSection("Cors").Get<CorsSettings>() ?? new CorsSettings();
+        services.AddCors(options => options.AddPolicy(Cors_Name,
+                                                      policy =>
+                                                      {
+                                                          policy.WithOrigins(corsSettings.AllowedOrigins)
+                                                                .WithMethods("GET", "POST")
+                                                                .WithHeaders(
+                                                                    "Authorization",
+                                                                    "Content-Type",
+                                                                    "Idempotency-Key");
+                                                      }));
 
         services.AddExceptionHandler<GlobalExceptionHandler>().AddProblemDetails();
         services.AddRateLimiter(options =>
