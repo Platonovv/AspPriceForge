@@ -91,7 +91,7 @@ app.UseSerilogRequestLogging(options =>
         = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms from {ClientIp}";
 });
 app.UseExceptionHandler();
-app.UseCors(ApiDependencyInjection.Cors_Name);
+app.UseCors(ApiDependencyInjection.CorsPolicyName);
 app.UseStatusCodePages();
 app.UseRateLimiter();
 

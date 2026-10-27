@@ -11,7 +11,7 @@ namespace PriceForge.Api;
 
 public static class ApiDependencyInjection
 {
-    public const string Cors_Name = "CORSNAME";
+    public const string CorsPolicyName = "CorsPolicy";
 
     public static IServiceCollection AddPresentation(this IServiceCollection services, IConfiguration configuration)
     {
@@ -21,7 +21,7 @@ public static class ApiDependencyInjection
                 .ValidateOnStart();
 
         CorsSettings corsSettings = configuration.GetSection("Cors").Get<CorsSettings>() ?? new CorsSettings();
-        services.AddCors(options => options.AddPolicy(Cors_Name,
+        services.AddCors(options => options.AddPolicy(CorsPolicyName,
                                                       policy =>
                                                       {
                                                           policy.WithOrigins(corsSettings.AllowedOrigins)
