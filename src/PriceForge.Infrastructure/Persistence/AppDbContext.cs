@@ -8,6 +8,7 @@ using PriceForge.Domain.Products;
 using PriceForge.Domain.PromoCodes;
 using PriceForge.Domain.Promotions;
 using PriceForge.Domain.Users;
+using PriceForge.Domain.Wallets;
 
 namespace PriceForge.Infrastructure.Persistence;
 
@@ -27,6 +28,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
     public DbSet<UserToken> UserTokens => Set<UserToken>();
+    public DbSet<Wallet> Wallets => Set<Wallet>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -87,7 +89,7 @@ public sealed class AppDbContext : DbContext
         }
         catch (DbUpdateConcurrencyException)
         {
-            throw new ConflictException("Product was modified by another request. Reload and retry");
+            throw new ConflictException("This item was updated by another action. Please refresh and try again.");
         }
     }
 }

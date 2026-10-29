@@ -12,6 +12,7 @@ using PriceForge.Application.Images;
 using PriceForge.Application.Products;
 using PriceForge.Application.Users;
 using PriceForge.Application.Users.UserTokens;
+using PriceForge.Application.Wallets;
 using PriceForge.Domain.Pricing;
 using PriceForge.Domain.Pricing.Strategies;
 
@@ -49,6 +50,13 @@ public static class ApplicationDependencyInjection
 
         services.AddOptions<LoginAttemptSettings>()
                 .Bind(configuration.GetSection("LoginAttemptSettings"))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
+        services.AddSingleton(TimeProvider.System);
+
+        services.AddOptions<WalletSettings>()
+                .Bind(configuration.GetSection("Wallet"))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
