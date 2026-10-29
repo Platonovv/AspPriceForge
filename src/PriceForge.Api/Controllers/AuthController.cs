@@ -1,4 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using PriceForge.Application.Authentication;
 using PriceForge.Application.Users;
-using PriceForge.Api.Common;
+using PriceForge.BuildingBlocks.Security;
 
 namespace PriceForge.Api.Controllers;
 

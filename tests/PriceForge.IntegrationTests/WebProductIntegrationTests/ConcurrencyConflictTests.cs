@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using PriceForge.Application.Common.Exceptions;
+using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Application.Products;
 using PriceForge.Application.Promotions;
 using PriceForge.Domain.Common;

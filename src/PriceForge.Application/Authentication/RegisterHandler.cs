@@ -1,5 +1,5 @@
-﻿using MediatR;
-using PriceForge.Application.Common.Exceptions;
+using MediatR;
+using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Domain.Users;
 
 namespace PriceForge.Application.Authentication;

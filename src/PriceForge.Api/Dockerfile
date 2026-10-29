@@ -11,6 +11,13 @@ COPY ["src/PriceForge.Api/PriceForge.Api.csproj", "src/PriceForge.Api/"]
 COPY ["src/PriceForge.Application/PriceForge.Application.csproj", "src/PriceForge.Application/"]
 COPY ["src/PriceForge.Domain/PriceForge.Domain.csproj", "src/PriceForge.Domain/"]
 COPY ["src/PriceForge.Infrastructure/PriceForge.Infrastructure.csproj", "src/PriceForge.Infrastructure/"]
+COPY ["src/PriceForge.BuildingBlocks/PriceForge.BuildingBlocks.csproj", "src/PriceForge.BuildingBlocks/"]
+COPY ["src/PriceForge.Catalog.Contracts/PriceForge.Catalog.Contracts.csproj", "src/PriceForge.Catalog.Contracts/"]
+COPY ["src/Modules/Game/PriceForge.Game.Domain/PriceForge.Game.Domain.csproj", "src/Modules/Game/PriceForge.Game.Domain/"]
+COPY ["src/Modules/Game/PriceForge.Game.Contracts/PriceForge.Game.Contracts.csproj", "src/Modules/Game/PriceForge.Game.Contracts/"]
+COPY ["src/Modules/Game/PriceForge.Game.Application/PriceForge.Game.Application.csproj", "src/Modules/Game/PriceForge.Game.Application/"]
+COPY ["src/Modules/Game/PriceForge.Game.Infrastructure/PriceForge.Game.Infrastructure.csproj", "src/Modules/Game/PriceForge.Game.Infrastructure/"]
+COPY ["src/Modules/Game/PriceForge.Game.Api/PriceForge.Game.Api.csproj", "src/Modules/Game/PriceForge.Game.Api/"]
 COPY ["Directory.Packages.props", "./"]
 RUN dotnet restore "src/PriceForge.Api/PriceForge.Api.csproj"
 COPY . .

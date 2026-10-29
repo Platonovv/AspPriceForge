@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PriceForge.Application.Brokers;
-using PriceForge.Application.Common.Exceptions;
+using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Domain.Categories;
 using PriceForge.Domain.Images;
 using PriceForge.Domain.Orders;
@@ -8,7 +8,6 @@ using PriceForge.Domain.Products;
 using PriceForge.Domain.PromoCodes;
 using PriceForge.Domain.Promotions;
 using PriceForge.Domain.Users;
-using PriceForge.Domain.Wallets;
 
 namespace PriceForge.Infrastructure.Persistence;
 
@@ -28,7 +27,6 @@ public sealed class AppDbContext : DbContext
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
     public DbSet<UserToken> UserTokens => Set<UserToken>();
-    public DbSet<Wallet> Wallets => Set<Wallet>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {

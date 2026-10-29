@@ -1,7 +1,7 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PriceForge.Api.Common;
+using PriceForge.BuildingBlocks.Security;
 using PriceForge.Api.Contracts.Users;
 using PriceForge.Application.Users;
 

@@ -1,7 +1,7 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using PriceForge.Application.Authentication;
-using PriceForge.Application.Common.Exceptions;
+using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Application.TokenGenerators;
 using PriceForge.Domain.Users;
 

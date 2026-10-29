@@ -1,5 +1,5 @@
-﻿using PriceForge.Application.Common;
-using PriceForge.Application.Common.Exceptions;
+using PriceForge.Application.Common;
+using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Application.Products;
 using PriceForge.Domain.Carts;
 using PriceForge.Domain.Common;

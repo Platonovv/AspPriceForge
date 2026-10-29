@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using PriceForge.Game.Infrastructure.Persistence;
 using PriceForge.Infrastructure.Persistence;
 using Respawn;
 using Testcontainers.PostgreSql;
@@ -23,6 +24,12 @@ public sealed class PostgresFixture : IAsyncLifetime
             .Options;
         await using var db = new AppDbContext(options);
         await db.Database.MigrateAsync();
+
+        DbContextOptions<GameDbContext> gameOptions = new DbContextOptionsBuilder<GameDbContext>()
+            .UseNpgsql(ConnectionString, npgsql => npgsql.MigrationsHistoryTable(GameDbContext.MigrationsHistoryTable, GameDbContext.Schema))
+            .Options;
+        await using var gameDb = new GameDbContext(gameOptions);
+        await gameDb.Database.MigrateAsync();
 
         _connection = new NpgsqlConnection(ConnectionString);
         await _connection.OpenAsync();

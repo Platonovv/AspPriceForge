@@ -1,10 +1,10 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
-using PriceForge.Api.Common;
-using PriceForge.Application.Common.Exceptions;
+using PriceForge.BuildingBlocks.Security;
+using PriceForge.BuildingBlocks.Exceptions;
 using StackExchange.Redis;
 
 namespace PriceForge.Api.Filters;

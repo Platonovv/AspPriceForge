@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Npgsql;
-using PriceForge.Application.Common.Exceptions;
+using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Application.Products;
 using PriceForge.Application.Search;
 using PriceForge.Domain.Products;

@@ -1,6 +1,6 @@
-﻿using MediatR;
+using MediatR;
 using PriceForge.Application.Cache;
-using PriceForge.Application.Common.Exceptions;
+using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Application.Products;
 using PriceForge.Application.Transactions;
 using PriceForge.Domain.Products;

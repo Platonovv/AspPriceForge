@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -12,6 +12,8 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using PriceForge.Infrastructure.Persistence.Factory;
 using PriceForge.Application.Common;
+using PriceForge.Game.Infrastructure.Persistence;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -55,6 +57,9 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     public string ConnectionString => _container.GetConnectionString();
 
+    private static void GameMigrationsHistory(NpgsqlDbContextOptionsBuilder npgsql)
+        => npgsql.MigrationsHistoryTable(GameDbContext.MigrationsHistoryTable, GameDbContext.Schema);
+
     public string RedisConnectionString => _redisContainer.GetConnectionString();
     public string MinioConnectionString => _minioContainer.GetConnectionString();
 
@@ -91,6 +96,9 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
             services.RemoveAll<DbContextOptions<AppDbContext>>();
             services.AddDbContext<AppDbContext>(options => options.UseNpgsql(ConnectionString));
+
+            services.RemoveAll<DbContextOptions<GameDbContext>>();
+            services.AddDbContext<GameDbContext>(options => options.UseNpgsql(ConnectionString, GameMigrationsHistory));
 
             services.RemoveAll<IDbConnectionFactory>();
             services.AddSingleton<IDbConnectionFactory>(_ => new NpgsqlConnectionFactory(
@@ -143,6 +151,12 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             .Options;
         await using var db = new AppDbContext(options);
         await db.Database.MigrateAsync();
+
+        DbContextOptions<GameDbContext> gameOptions = new DbContextOptionsBuilder<GameDbContext>()
+                                                      .UseNpgsql(ConnectionString, GameMigrationsHistory)
+                                                      .Options;
+        await using var gameDb = new GameDbContext(gameOptions);
+        await gameDb.Database.MigrateAsync();
 
         _connection = new NpgsqlConnection(ConnectionString);
         await _connection.OpenAsync();

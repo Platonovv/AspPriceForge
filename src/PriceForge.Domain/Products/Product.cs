@@ -1,4 +1,4 @@
-﻿using PriceForge.Application.Common.Exceptions;
+using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Domain.Common;
 using PriceForge.Domain.Pricing;
 

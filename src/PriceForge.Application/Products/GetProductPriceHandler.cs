@@ -1,6 +1,6 @@
-﻿using MediatR;
+using MediatR;
 using PriceForge.Application.Categories;
-using PriceForge.Application.Common.Exceptions;
+using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Application.Promotions;
 using PriceForge.Domain.Categories;
 using PriceForge.Domain.Common;

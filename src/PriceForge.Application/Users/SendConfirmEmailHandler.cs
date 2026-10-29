@@ -1,10 +1,10 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PriceForge.Application.Authentication;
 using PriceForge.Application.Brokers;
-using PriceForge.Application.Common.Exceptions;
+using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Application.Notifications;
 using PriceForge.Application.TokenGenerators;
 using PriceForge.Application.Users.UserTokens;

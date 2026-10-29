@@ -1,11 +1,11 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using PriceForge.Application.Authentication;
 using PriceForge.Application.Brokers;
 using PriceForge.Application.Carts;
-using PriceForge.Application.Common.Exceptions;
+using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Application.PromoCodes;
 using PriceForge.Application.Transactions;
 using PriceForge.Domain.Orders;

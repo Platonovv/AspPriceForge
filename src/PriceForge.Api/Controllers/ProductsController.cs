@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -7,12 +7,13 @@ using Microsoft.AspNetCore.SignalR;
 using PriceForge.Api.Contracts.Products;
 using PriceForge.Api.Filters;
 using PriceForge.Api.Hubs;
-using PriceForge.Application.Common.Exceptions;
+using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Application.Images;
 using PriceForge.Application.Products;
 using PriceForge.Application.Users;
 using PriceForge.Domain.Pricing;
 using PriceForge.Api.Common;
+using PriceForge.BuildingBlocks.Security;
 
 namespace PriceForge.Api.Controllers;
 

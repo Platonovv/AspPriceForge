@@ -1803,6 +1803,94 @@
           }
         }
       }
+    },
+    "/api/v1/wallet": {
+      "get": {
+        "tags": [
+          "Wallet"
+        ],
+        "operationId": "Wallet_GetBalance",
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/wallet/earn": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "operationId": "Wallet_EarnMoney",
+        "requestBody": {
+          "x-name": "earnCoinsRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EarnCoinsRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2300,6 +2388,16 @@
           },
           "newPassword": {
             "type": "string"
+          }
+        }
+      },
+      "EarnCoinsRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "earnMoney": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       }

@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PriceForge.Application.Authentication;
@@ -12,7 +12,7 @@ using PriceForge.Application.Images;
 using PriceForge.Application.Products;
 using PriceForge.Application.Users;
 using PriceForge.Application.Users.UserTokens;
-using PriceForge.Application.Wallets;
+using PriceForge.Catalog.Contracts;
 using PriceForge.Domain.Pricing;
 using PriceForge.Domain.Pricing.Strategies;
 
@@ -55,11 +55,6 @@ public static class ApplicationDependencyInjection
 
         services.AddSingleton(TimeProvider.System);
 
-        services.AddOptions<WalletSettings>()
-                .Bind(configuration.GetSection("Wallet"))
-                .ValidateDataAnnotations()
-                .ValidateOnStart();
-
         services.AddHostedService<RefreshTokenCleanupService>();
         services.AddHostedService<PublicPriceRefresherService>();
         services.AddHostedService<OutboxDispatcher>();
@@ -75,6 +70,7 @@ public static class ApplicationDependencyInjection
         services.AddScoped<ICacheVersion, CacheVersion>();
         services.AddScoped<ImageCleaner>();
         services.AddScoped<PublicPriceRefresher>();
+        services.AddScoped<ICatalogModuleApi, CatalogModuleApi>();
 
         return services;
     }

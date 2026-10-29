@@ -1,7 +1,7 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using PriceForge.Application.Common.Exceptions;
+using PriceForge.BuildingBlocks.Exceptions;
 
 namespace PriceForge.Api.Middleware;
 

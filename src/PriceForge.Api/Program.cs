@@ -10,6 +10,7 @@ using PriceForge.Api;
 using PriceForge.Api.Endpoints;
 using PriceForge.Api.Middleware;
 using PriceForge.Application;
+using PriceForge.Game.Api;
 using PriceForge.Infrastructure;
 using Serilog;
 using Serilog.Events;
@@ -52,6 +53,7 @@ builder.Services
        .AddRedis(builder.Configuration.GetConnectionString("Redis")!, name: "redis", tags: ["ready"]);
 
 builder.Services.AddApplication(builder.Configuration);
+builder.Services.AddGameModule(builder.Configuration);
 builder.Services.AddControllers();
 builder.Services.AddOpenApiDocument(settings =>
 {

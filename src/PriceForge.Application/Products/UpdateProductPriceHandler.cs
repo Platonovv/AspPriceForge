@@ -1,8 +1,8 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using MediatR;
 using PriceForge.Application.Brokers;
 using PriceForge.Application.Cache;
-using PriceForge.Application.Common.Exceptions;
+using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Domain.Common;
 using PriceForge.Domain.Products;
 

@@ -1,10 +1,10 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PriceForge.Application.PromoCodes;
 using PriceForge.Application.Users;
 using PriceForge.Domain.Pricing;
-using PriceForge.Api.Common;
+using PriceForge.BuildingBlocks.Security;
 
 namespace PriceForge.Api.Controllers;
 

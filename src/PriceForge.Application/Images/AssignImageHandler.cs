@@ -1,6 +1,6 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Logging;
-using PriceForge.Application.Common.Exceptions;
+using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Application.Products;
 using PriceForge.Application.Products.Images;
 using PriceForge.Domain.Images;

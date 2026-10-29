@@ -1,4 +1,4 @@
-﻿using System.Data.Common;
+using System.Data.Common;
 using Amazon.Runtime;
 using Amazon.S3;
 using FirebaseAdmin;
@@ -26,7 +26,6 @@ using PriceForge.Application.Products;
 using PriceForge.Application.PromoCodes;
 using PriceForge.Application.Promotions;
 using PriceForge.Application.Transactions;
-using PriceForge.Application.Wallets;
 using PriceForge.Infrastructure.Authentication;
 using PriceForge.Infrastructure.Images;
 using PriceForge.Infrastructure.Notifications;
@@ -158,7 +157,6 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<ICartRepository, RedisCartRepository>();
         services.AddScoped<IOrderRepository, EfOrderRepository>();
         services.AddScoped<IUserTokenRepository, EfUserTokenRepository>();
-        services.AddScoped<IWalletRepository, EfWalletRepository>();
 
         services.AddScoped<ITransactionRunner, TransactionRunner>();
 

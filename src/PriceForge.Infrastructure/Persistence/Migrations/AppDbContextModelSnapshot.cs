@@ -261,7 +261,6 @@ namespace PriceForge.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("PriceForge.Domain.Products.ProductComponent", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -508,35 +507,6 @@ namespace PriceForge.Infrastructure.Persistence.Migrations
                     b.ToTable("user_tokens", (string)null);
                 });
 
-            modelBuilder.Entity("PriceForge.Domain.Wallets.Wallet", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.Property<long>("Balance")
-                        .HasColumnType("bigint")
-                        .HasColumnName("balance");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTime>("LastEarnedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_earned_at_utc");
-
-                    b.Property<uint>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
-
-                    b.HasKey("UserId");
-
-                    b.ToTable("wallets", (string)null);
-                });
-
             modelBuilder.Entity("PriceForge.Infrastructure.Persistence.ProductClosure", b =>
                 {
                     b.Property<Guid>("AncestorId")
@@ -698,15 +668,6 @@ namespace PriceForge.Infrastructure.Persistence.Migrations
                     b.HasOne("PriceForge.Domain.Users.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("PriceForge.Domain.Wallets.Wallet", b =>
-                {
-                    b.HasOne("PriceForge.Domain.Users.User", null)
-                        .WithOne()
-                        .HasForeignKey("PriceForge.Domain.Wallets.Wallet", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

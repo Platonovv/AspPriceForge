@@ -11,7 +11,7 @@ internal sealed class ProductComponentConfiguration : IEntityTypeConfiguration<P
         builder.ToTable("product_components");
         builder.HasKey(c => c.Id);
 
-        builder.Property(c => c.Id).HasColumnName("id");
+        builder.Property(c => c.Id).HasColumnName("id").ValueGeneratedNever();
         builder.Property(c => c.ParentId).HasColumnName("parent_id");
         builder.Property(c => c.ChildId).HasColumnName("child_id");
         builder.Property(c => c.Quantity).HasColumnName("quantity");

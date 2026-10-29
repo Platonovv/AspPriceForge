@@ -31,6 +31,7 @@
   <ItemGroup>
     <ProjectReference Include="..\PriceForge.Application\PriceForge.Application.csproj" />
     <ProjectReference Include="..\PriceForge.Infrastructure\PriceForge.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Game\PriceForge.Game.Api\PriceForge.Game.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
