@@ -7,11 +7,9 @@ public sealed class Wallet
     public Guid UserId { get; }
     public DateTime CreatedAt { get; }
     public DateTime LastEarnedAtUtc { get; private set; }
-
     public long Balance { get; private set; }
 
     private readonly List<WalletTransaction> _transactions = new();
-
     public IReadOnlyList<WalletTransaction> Transactions => _transactions;
 
     public Wallet(Guid userId, DateTime createdAt)
@@ -69,9 +67,12 @@ public sealed class Wallet
 
         Balance += earnMoney;
         LastEarnedAtUtc = earnedAt;
+
+        WalletTransaction walletTransaction = new WalletTransaction(UserId, earnMoney, WalletTransactionReason.Earn, earnedAt);
+        _transactions.Add(walletTransaction);
     }
 
-    public void Spend(long spendMoney)
+    public void Spend(long spendMoney, DateTime spentAt)
     {
         if (spendMoney <= 0)
         {
@@ -83,6 +84,14 @@ public sealed class Wallet
             throw new DomainException("Insufficient funds");
         }
 
+        if (spentAt == DateTime.MinValue)
+        {
+            throw new DomainException("SpendAt cannot be empty");
+        }
+
         Balance -= spendMoney;
+
+        WalletTransaction walletTransaction = new WalletTransaction(UserId, -spendMoney, WalletTransactionReason.Purchase, spentAt);
+        _transactions.Add(walletTransaction);
     }
 }

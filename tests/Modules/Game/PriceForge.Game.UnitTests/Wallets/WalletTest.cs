@@ -12,7 +12,16 @@ public class WalletTest
 
     private static readonly DateTime CreatedAt = new(2026, 10, 19, 12, 0, 0, DateTimeKind.Utc);
 
+    private static readonly DateTime SpentAt = CreatedAt.AddMinutes(1);
+
     private static Wallet CreateWallet() => new(Guid.NewGuid(), CreatedAt);
+
+    private static Wallet CreateWalletWith50Coins()
+    {
+        Wallet wallet = CreateWallet();
+        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt.AddSeconds(5));
+        return wallet;
+    }
 
     [Fact]
     public void NewWallet_IsEmpty()
@@ -24,6 +33,7 @@ public class WalletTest
         Assert.Equal(userId, wallet.UserId);
         Assert.Equal(0, wallet.Balance);
         Assert.Equal(default, wallet.LastEarnedAtUtc);
+        Assert.Empty(wallet.Transactions);
     }
 
     [Fact]
@@ -133,12 +143,36 @@ public class WalletTest
     }
 
     [Fact]
-    public void Spend_EnoughCoins_DecreasesBalance()
+    public void Earn_WritesPositiveEarnEntry()
     {
         Wallet wallet = CreateWallet();
-        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt.AddSeconds(5));
+        DateTime now = CreatedAt.AddSeconds(5);
 
-        wallet.Spend(30);
+        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, now);
+
+        WalletTransaction entry = Assert.Single(wallet.Transactions);
+        Assert.Equal(wallet.UserId, entry.UserId);
+        Assert.Equal(50, entry.Amount);
+        Assert.Equal(WalletTransactionReason.Earn, entry.Reason);
+        Assert.Equal(now, entry.CreatedAt);
+        Assert.NotEqual(Guid.Empty, entry.Id);
+    }
+
+    [Fact]
+    public void Earn_Rejected_WritesNoEntry()
+    {
+        Wallet wallet = CreateWallet();
+
+        Assert.Throws<DomainException>(() => wallet.Earn(301, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt));
+        Assert.Empty(wallet.Transactions);
+    }
+
+    [Fact]
+    public void Spend_EnoughCoins_DecreasesBalance()
+    {
+        Wallet wallet = CreateWalletWith50Coins();
+
+        wallet.Spend(30, SpentAt);
 
         Assert.Equal(20, wallet.Balance);
     }
@@ -146,10 +180,9 @@ public class WalletTest
     [Fact]
     public void Spend_WholeBalance_LeavesZero()
     {
-        Wallet wallet = CreateWallet();
-        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt.AddSeconds(5));
+        Wallet wallet = CreateWalletWith50Coins();
 
-        wallet.Spend(50);
+        wallet.Spend(50, SpentAt);
 
         Assert.Equal(0, wallet.Balance);
     }
@@ -157,10 +190,9 @@ public class WalletTest
     [Fact]
     public void Spend_NotEnoughCoins_ThrowsAndKeepsBalance()
     {
-        Wallet wallet = CreateWallet();
-        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt.AddSeconds(5));
+        Wallet wallet = CreateWalletWith50Coins();
 
-        Assert.Throws<DomainException>(() => wallet.Spend(51));
+        Assert.Throws<DomainException>(() => wallet.Spend(51, SpentAt));
         Assert.Equal(50, wallet.Balance);
     }
 
@@ -171,6 +203,51 @@ public class WalletTest
     {
         Wallet wallet = CreateWallet();
 
-        Assert.Throws<DomainException>(() => wallet.Spend(coins));
+        Assert.Throws<DomainException>(() => wallet.Spend(coins, SpentAt));
+    }
+
+    [Fact]
+    public void Spend_EmptyTime_ThrowsDomainExceptionAndKeepsState()
+    {
+        Wallet wallet = CreateWalletWith50Coins();
+
+        Assert.Throws<DomainException>(() => wallet.Spend(10, DateTime.MinValue));
+        Assert.Equal(50, wallet.Balance);
+        Assert.Single(wallet.Transactions);
+    }
+
+    [Fact]
+    public void Spend_WritesNegativePurchaseEntry()
+    {
+        Wallet wallet = CreateWalletWith50Coins();
+
+        wallet.Spend(30, SpentAt);
+
+        WalletTransaction entry = wallet.Transactions[^1];
+        Assert.Equal(-30, entry.Amount);
+        Assert.Equal(WalletTransactionReason.Purchase, entry.Reason);
+        Assert.Equal(SpentAt, entry.CreatedAt);
+    }
+
+    [Fact]
+    public void Spend_NotEnoughCoins_WritesNoEntry()
+    {
+        Wallet wallet = CreateWalletWith50Coins();
+
+        Assert.Throws<DomainException>(() => wallet.Spend(51, SpentAt));
+        Assert.Single(wallet.Transactions);
+    }
+
+    [Fact]
+    public void Journal_SumOfAmounts_EqualsBalance()
+    {
+        Wallet wallet = CreateWallet();
+        wallet.Earn(300, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt);
+        wallet.Spend(120, CreatedAt.AddSeconds(1));
+        wallet.Earn(100, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt.AddSeconds(20));
+        wallet.Spend(30, CreatedAt.AddSeconds(21));
+
+        Assert.Equal(4, wallet.Transactions.Count);
+        Assert.Equal(wallet.Balance, wallet.Transactions.Sum(t => t.Amount));
     }
 }
