@@ -100,6 +100,9 @@ public class EarnCoinsHandlerTest
         public Task<Wallet?> GetByUserIdAsync(Guid userId, CancellationToken ct)
             => Task.FromResult(Saved.FirstOrDefault(w => w.UserId == userId));
 
+        public Task<Wallet?> GetByUserIdForUpdateAsync(Guid userId, CancellationToken ct)
+            => GetByUserIdAsync(userId, ct);
+
         public Task AddAsync(Wallet wallet, CancellationToken ct)
         {
             _added.Add(wallet);
