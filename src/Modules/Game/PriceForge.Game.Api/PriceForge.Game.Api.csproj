@@ -7,6 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="..\PriceForge.Game.Application\PriceForge.Game.Application.csproj" />
     <ProjectReference Include="..\PriceForge.Game.Infrastructure\PriceForge.Game.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\PriceForge.BuildingBlocks.Web\PriceForge.BuildingBlocks.Web.csproj" />
   </ItemGroup>
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>

@@ -16,10 +16,6 @@ namespace PriceForge.IntegrationTests.WebGameTests;
 [Trait("Category", "Integration")]
 public class BuyGameItemTests : IClassFixture<ApiFactory>
 {
-    private static readonly Guid GoldenSwordId = Guid.Parse("0b9d3c1e-6a51-4f7e-9c2a-3e5f1a7b8c01");
-    private static readonly Guid SpeedBoostId = Guid.Parse("0b9d3c1e-6a51-4f7e-9c2a-3e5f1a7b8c02");
-    private const long SpeedBoostPrice = 150;
-
     private readonly ApiFactory _factory;
 
     public BuyGameItemTests(ApiFactory factory) => _factory = factory;
@@ -29,10 +25,10 @@ public class BuyGameItemTests : IClassFixture<ApiFactory>
     {
         Guid userId = await CreateUserWithCoinsAsync("buy-item-ok@priceforge.test", 200);
 
-        CoinPurchaseDto result = await SendAsync(new BuyGameItemCommand(userId, SpeedBoostId, "buy-ok-1"));
+        CoinPurchaseDto result = await SendAsync(new BuyGameItemCommand(userId, GameTestData.SpeedBoostId, "buy-ok-1"));
 
-        Assert.Equal(SpeedBoostId, result.ProductId);
-        Assert.Equal(SpeedBoostPrice, result.CoinPrice);
+        Assert.Equal(GameTestData.SpeedBoostId, result.ProductId);
+        Assert.Equal(GameTestData.SpeedBoostPrice, result.CoinPrice);
 
         using IServiceScope scope = _factory.Services.CreateScope();
         GameDbContext db = scope.ServiceProvider.GetRequiredService<GameDbContext>();
@@ -45,14 +41,14 @@ public class BuyGameItemTests : IClassFixture<ApiFactory>
 
         Assert.Equal(50, wallet.Balance);
         Assert.Equal(result.PurchaseId, purchase.Id);
-        Assert.Contains(entries, t => t.Amount == -SpeedBoostPrice && t.Reason == WalletTransactionReason.Purchase);
+        Assert.Contains(entries, t => t.Amount == -GameTestData.SpeedBoostPrice && t.Reason == WalletTransactionReason.Purchase);
     }
 
     [Fact]
     public async Task Buy_RepeatWithSameKey_ReturnsSamePurchaseWithoutSecondSpend()
     {
         Guid userId = await CreateUserWithCoinsAsync("buy-item-repeat@priceforge.test", 400);
-        BuyGameItemCommand command = new(userId, SpeedBoostId, "buy-repeat-1");
+        BuyGameItemCommand command = new(userId, GameTestData.SpeedBoostId, "buy-repeat-1");
 
         CoinPurchaseDto first = await SendAsync(command);
         CoinPurchaseDto second = await SendAsync(command);
@@ -78,7 +74,7 @@ public class BuyGameItemTests : IClassFixture<ApiFactory>
         Guid userId = await CreateUserWithCoinsAsync("buy-item-poor@priceforge.test", 100);
 
         await Assert.ThrowsAsync<DomainException>(
-            () => SendAsync(new BuyGameItemCommand(userId, GoldenSwordId, "buy-poor-1")));
+            () => SendAsync(new BuyGameItemCommand(userId, GameTestData.GoldenSwordId, "buy-poor-1")));
 
         using IServiceScope scope = _factory.Services.CreateScope();
         GameDbContext db = scope.ServiceProvider.GetRequiredService<GameDbContext>();
@@ -92,10 +88,10 @@ public class BuyGameItemTests : IClassFixture<ApiFactory>
     [Fact]
     public async Task Buy_WalletNeverEarned_ThrowsDomainException()
     {
-        await SeedGameItemsAsync();
+        await _factory.SeedGameItemsAsync();
 
         await Assert.ThrowsAsync<DomainException>(
-            () => SendAsync(new BuyGameItemCommand(Guid.NewGuid(), SpeedBoostId, "buy-no-wallet-1")));
+            () => SendAsync(new BuyGameItemCommand(Guid.NewGuid(), GameTestData.SpeedBoostId, "buy-no-wallet-1")));
     }
 
     [Fact]
@@ -105,24 +101,6 @@ public class BuyGameItemTests : IClassFixture<ApiFactory>
 
         await Assert.ThrowsAsync<NotFoundException>(
             () => SendAsync(new BuyGameItemCommand(userId, Guid.NewGuid(), "buy-unknown-1")));
-    }
-
-    private async Task SeedGameItemsAsync()
-    {
-        using IServiceScope scope = _factory.Services.CreateScope();
-        GameDbContext db = scope.ServiceProvider.GetRequiredService<GameDbContext>();
-
-        await db.Database.ExecuteSqlRawAsync("""
-            INSERT INTO products (id, sku, name, base_price_amount, base_price_currency, public_price)
-            VALUES ('0b9d3c1e-6a51-4f7e-9c2a-3e5f1a7b8c01', 'GAME-GOLDEN-SWORD', 'Golden Sword', 1.99, 'USD', 1.99),
-                   ('0b9d3c1e-6a51-4f7e-9c2a-3e5f1a7b8c02', 'GAME-SPEED-BOOST', 'Speed Boost', 0.99, 'USD', 0.99)
-            ON CONFLICT (id) DO NOTHING;
-
-            INSERT INTO game.game_items (product_id, coin_price)
-            VALUES ('0b9d3c1e-6a51-4f7e-9c2a-3e5f1a7b8c01', 500),
-                   ('0b9d3c1e-6a51-4f7e-9c2a-3e5f1a7b8c02', 150)
-            ON CONFLICT (product_id) DO NOTHING;
-            """);
     }
 
     private async Task<CoinPurchaseDto> SendAsync(BuyGameItemCommand command)
@@ -135,7 +113,7 @@ public class BuyGameItemTests : IClassFixture<ApiFactory>
 
     private async Task<Guid> CreateUserWithCoinsAsync(string email, long coins)
     {
-        await SeedGameItemsAsync();
+        await _factory.SeedGameItemsAsync();
 
         HttpClient client = _factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.AuthHeader, "true");

@@ -1,7 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PriceForge.Api.Filters;
+using PriceForge.BuildingBlocks.Web.Filters;
 using PriceForge.Application.Orders;
 using PriceForge.Application.Users;
 using PriceForge.Domain.Pricing;

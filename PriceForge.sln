@@ -50,6 +50,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PriceForge.ArchitectureTest
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PriceForge.Game.UnitTests", "tests\Modules\Game\PriceForge.Game.UnitTests\PriceForge.Game.UnitTests.csproj", "{2C14E2E2-090B-47D6-A35D-A0963885D793}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PriceForge.BuildingBlocks.Web", "src\PriceForge.BuildingBlocks.Web\PriceForge.BuildingBlocks.Web.csproj", "{7C6513D5-6919-4352-B124-72F17F2C0545}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -123,6 +125,10 @@ Global
 		{2C14E2E2-090B-47D6-A35D-A0963885D793}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C14E2E2-090B-47D6-A35D-A0963885D793}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C14E2E2-090B-47D6-A35D-A0963885D793}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C6513D5-6919-4352-B124-72F17F2C0545}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C6513D5-6919-4352-B124-72F17F2C0545}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C6513D5-6919-4352-B124-72F17F2C0545}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C6513D5-6919-4352-B124-72F17F2C0545}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{2651788D-8761-4AFC-A2A0-6A7116CC6B49} = {17CDD776-10D5-42C2-993E-945996AEF1DF}
@@ -143,5 +149,6 @@ Global
 		{1627A6B0-6DFF-420D-BEE3-0AF85ABA7206} = {7316858B-473E-45E0-9160-68F7D6D9FEB3}
 		{D5B02200-37E2-4D4E-B8BA-0AD42DFF09ED} = {07B51754-B30C-40EA-8646-82E21868B224}
 		{2C14E2E2-090B-47D6-A35D-A0963885D793} = {07B51754-B30C-40EA-8646-82E21868B224}
+		{7C6513D5-6919-4352-B124-72F17F2C0545} = {17CDD776-10D5-42C2-993E-945996AEF1DF}
 	EndGlobalSection
 EndGlobal

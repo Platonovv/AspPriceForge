@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Options;
@@ -7,7 +8,7 @@ using PriceForge.BuildingBlocks.Security;
 using PriceForge.BuildingBlocks.Exceptions;
 using StackExchange.Redis;
 
-namespace PriceForge.Api.Filters;
+namespace PriceForge.BuildingBlocks.Web.Filters;
 
 public sealed class IdempotencyFilter : IAsyncActionFilter
 {

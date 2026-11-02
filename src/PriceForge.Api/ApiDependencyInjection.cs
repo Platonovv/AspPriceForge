@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using PriceForge.Api.Authentication;
 using PriceForge.Api.Common;
-using PriceForge.Api.Filters;
+using PriceForge.BuildingBlocks.Web.Filters;
 using PriceForge.Api.Middleware;
 
 namespace PriceForge.Api;

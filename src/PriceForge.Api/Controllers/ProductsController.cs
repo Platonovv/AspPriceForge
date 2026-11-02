@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using PriceForge.Api.Contracts.Products;
-using PriceForge.Api.Filters;
+using PriceForge.BuildingBlocks.Web.Filters;
 using PriceForge.Api.Hubs;
 using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Application.Images;
