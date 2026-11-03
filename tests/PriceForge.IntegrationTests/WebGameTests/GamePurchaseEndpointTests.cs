@@ -48,6 +48,19 @@ public class GamePurchaseEndpointTests : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Purchase_SameKeyWithDifferentBody_Returns422()
+    {
+        HttpClient client = await CreateClientWithCoinsAsync("purchase-api-reuse@priceforge.test", 400);
+
+        HttpResponseMessage first = await PostPurchaseAsync(client, GameTestData.SpeedBoostId, "api-reuse-1");
+        HttpResponseMessage second = await PostPurchaseAsync(client, GameTestData.GoldenSwordId, "api-reuse-1");
+
+        Assert.Equal(HttpStatusCode.Created, first.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, second.StatusCode);
+        Assert.Equal(250, await GetBalanceAsync(client));
+    }
+
+    [Fact]
     public async Task Purchase_WithoutIdempotencyKey_Returns400()
     {
         HttpClient client = await CreateClientWithCoinsAsync("purchase-api-nokey@priceforge.test", 200);

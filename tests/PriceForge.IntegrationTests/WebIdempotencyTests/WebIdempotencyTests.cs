@@ -30,7 +30,7 @@ public class WebIdempotencyTests : IClassFixture<ApiFactory>
                                                             "Admin",
                                                             new
                                                             {
-                                                                Sku = $"IDEM-{Guid.NewGuid():N}",
+                                                                Sku = $"IDEM-{name.Replace(' ', '-')}",
                                                                 Name = name,
                                                                 Price = 100m,
                                                                 Currency = "RUB"

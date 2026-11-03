@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -34,6 +35,8 @@ public sealed class IdempotencyFilter : IAsyncActionFilter
             return;
         }
 
+        string hashQuery = ComputeArgumentsHash(context);
+
         Guid userId = context.HttpContext.User.GetUserId();
         string requestMethod = context.HttpContext.Request.Method;
         PathString requestPath = context.HttpContext.Request.Path;
@@ -42,7 +45,7 @@ public sealed class IdempotencyFilter : IAsyncActionFilter
         RedisValue redisCacheValue = await _cacheDatabase.StringGetAsync(key);
         RedisKey lockKey = $"{key}:lock";
 
-        if (GetRedisCacheValue(context, redisCacheValue))
+        if (GetRedisCacheValue(context, hashQuery, redisCacheValue))
         {
             return;
         }
@@ -56,7 +59,7 @@ public sealed class IdempotencyFilter : IAsyncActionFilter
         {
             redisCacheValue = await _cacheDatabase.StringGetAsync(key);
 
-            if (GetRedisCacheValue(context, redisCacheValue))
+            if (GetRedisCacheValue(context, hashQuery, redisCacheValue))
             {
                 return;
             }
@@ -66,6 +69,7 @@ public sealed class IdempotencyFilter : IAsyncActionFilter
             if (executed.Result is CreatedResult created)
             {
                 var cachedResponse = new CachedCreatedResponse(created.Location,
+                                                               hashQuery,
                                                                JsonSerializer.SerializeToElement(
                                                                    created.Value,
                                                                    _options.Value.JsonSerializerOptions));
@@ -80,7 +84,19 @@ public sealed class IdempotencyFilter : IAsyncActionFilter
         }
     }
 
-    private bool GetRedisCacheValue(ActionExecutingContext context, RedisValue redisCacheValue)
+    private string ComputeArgumentsHash(ActionExecutingContext context)
+    {
+        Dictionary<string, object?> filterActionArguments = context.ActionArguments
+                                                                   .Where(x => x.Value is not CancellationToken)
+                                                                   .ToDictionary(x => x.Key, x => x.Value);
+
+        byte[] filterActionArgumentsBytes = JsonSerializer.SerializeToUtf8Bytes(filterActionArguments);
+        byte[] filterActionArgumentsHash = SHA256.HashData(filterActionArgumentsBytes);
+
+        return Convert.ToHexString(filterActionArgumentsHash);
+    }
+
+    private bool GetRedisCacheValue(ActionExecutingContext context, string hash, RedisValue redisCacheValue)
     {
         if (!redisCacheValue.HasValue)
         {
@@ -88,10 +104,15 @@ public sealed class IdempotencyFilter : IAsyncActionFilter
         }
 
         CachedCreatedResponse? cachedResponse = JsonSerializer.Deserialize<CachedCreatedResponse>(redisCacheValue!);
-        context.Result = new CreatedResult(cachedResponse!.Location, cachedResponse.Body);
+
+        IActionResult result = hash == cachedResponse?.HashQuery
+                                   ? new CreatedResult(cachedResponse!.Location, cachedResponse.Body)
+                                   : new UnprocessableEntityResult();
+
+        context.Result = result;
 
         return true;
     }
 
-    private sealed record CachedCreatedResponse(string? Location, JsonElement Body);
+    private sealed record CachedCreatedResponse(string? Location, string HashQuery, JsonElement Body);
 }
