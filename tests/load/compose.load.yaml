@@ -1,0 +1,16 @@
+services:
+  priceforge:
+    environment:
+      LoginRateLimit__PermitLimit: "60"
+      LoginRateLimit__WindowMinutes: "1"
+
+  k6:
+    image: grafana/k6:1.0.0
+    profiles:
+      - load
+    volumes:
+      - ./tests/load:/scripts:ro
+    environment:
+      BASE_URL: "http://priceforge:8080"
+      PREPARE: ${PREPARE:-0}
+    command: run /scripts/wallet-load.js
