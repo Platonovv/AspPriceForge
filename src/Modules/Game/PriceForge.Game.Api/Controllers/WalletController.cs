@@ -39,10 +39,13 @@ public class WalletController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> EarnCoins([FromBody] EarnCoinsRequest earnCoinsRequest, CancellationToken ct)
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> EarnCoins([FromBody] EarnCoinsRequest earnCoinsRequest,
+                                               [FromHeader(Name = "Idempotency-Key")] string idempotencyKey,
+                                               CancellationToken ct)
     {
         Guid userId = User.GetUserId();
-        long balance = await _sender.Send(new EarnCoinsCommand(userId, earnCoinsRequest.Coins), ct);
+        long balance = await _sender.Send(new EarnCoinsCommand(userId, idempotencyKey, earnCoinsRequest.Coins), ct);
 
         return Ok(balance);
     }

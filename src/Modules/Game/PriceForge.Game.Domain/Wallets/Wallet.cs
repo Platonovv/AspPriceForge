@@ -32,7 +32,11 @@ public sealed class Wallet
     {
     }
 
-    public void Earn(long coins, int maxCoinsPerSecond, int maxEarnWindowSeconds, DateTime earnedAt)
+    public void Earn(long coins,
+                     int maxCoinsPerSecond,
+                     int maxEarnWindowSeconds,
+                     string idempotencyKey,
+                     DateTime earnedAt)
     {
         if (coins <= 0)
         {
@@ -68,7 +72,8 @@ public sealed class Wallet
         Balance += coins;
         LastEarnedAtUtc = earnedAt;
 
-        WalletTransaction walletTransaction = new WalletTransaction(UserId, coins, WalletTransactionReason.Earn, earnedAt);
+        WalletTransaction walletTransaction
+            = new WalletTransaction(UserId, coins, idempotencyKey, WalletTransactionReason.Earn, earnedAt);
         _transactions.Add(walletTransaction);
     }
 
@@ -91,7 +96,8 @@ public sealed class Wallet
 
         Balance -= spendMoney;
 
-        WalletTransaction walletTransaction = new WalletTransaction(UserId, -spendMoney, WalletTransactionReason.Purchase, spentAt);
+        WalletTransaction walletTransaction
+            = new WalletTransaction(UserId, -spendMoney, null, WalletTransactionReason.Purchase, spentAt);
         _transactions.Add(walletTransaction);
     }
 }

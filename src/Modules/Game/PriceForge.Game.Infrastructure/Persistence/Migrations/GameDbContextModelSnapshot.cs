@@ -119,6 +119,11 @@ namespace PriceForge.Game.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("idempotency_key");
+
                     b.Property<string>("Reason")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -132,6 +137,9 @@ namespace PriceForge.Game.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("UserId", "CreatedAt");
+
+                    b.HasIndex("UserId", "IdempotencyKey")
+                        .IsUnique();
 
                     b.ToTable("wallet_transactions", "game");
                 });

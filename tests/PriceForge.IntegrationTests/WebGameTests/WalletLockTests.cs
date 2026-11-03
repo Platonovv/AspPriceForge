@@ -148,7 +148,7 @@ public class WalletLockTests : IClassFixture<ApiFactory>
     }
 
     private static void EarnFifty(Wallet wallet)
-        => wallet.Earn(50, 20, 30, wallet.LastEarnedAtUtc.AddSeconds(10));
+        => wallet.Earn(50, 20, 30, Guid.NewGuid().ToString(), wallet.LastEarnedAtUtc.AddSeconds(10));
 
     private async Task RunLockedAsync(Guid userId, Func<Task> whileLocked)
     {

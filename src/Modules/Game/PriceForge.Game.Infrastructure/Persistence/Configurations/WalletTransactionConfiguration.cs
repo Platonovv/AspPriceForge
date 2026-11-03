@@ -16,7 +16,11 @@ internal sealed class WalletTransactionConfiguration : IEntityTypeConfiguration<
         builder.Property(t => t.Amount).HasColumnName("amount");
         builder.Property(t => t.Reason).HasColumnName("reason").HasConversion<string>().HasMaxLength(32);
         builder.Property(t => t.CreatedAt).HasColumnName("created_at");
+        builder.Property(t => t.IdempotencyKey)
+               .HasColumnName("idempotency_key")
+               .HasMaxLength(WalletTransaction.MaxIdempotencyKeyLength);
 
         builder.HasIndex(t => new {t.UserId, t.CreatedAt});
+        builder.HasIndex(t => new {t.UserId, t.IdempotencyKey}).IsUnique();
     }
 }

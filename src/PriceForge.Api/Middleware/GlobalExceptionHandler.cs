@@ -22,21 +22,23 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
     {
         int status = exception switch
         {
-            ValidationException         => StatusCodes.Status400BadRequest,
-            BusinessRuleException       => StatusCodes.Status400BadRequest,
-            KeyNotFoundException        => StatusCodes.Status404NotFound,
-            NotFoundException           => StatusCodes.Status404NotFound,
-            UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
-            ConflictException           => StatusCodes.Status409Conflict,
-            ForbiddenException          => StatusCodes.Status403Forbidden,
-            TooManyRequestsException    => StatusCodes.Status429TooManyRequests,
-            DomainException             => StatusCodes.Status400BadRequest,
-            _                           => StatusCodes.Status500InternalServerError
+            ValidationException          => StatusCodes.Status400BadRequest,
+            BusinessRuleException        => StatusCodes.Status400BadRequest,
+            KeyNotFoundException         => StatusCodes.Status404NotFound,
+            NotFoundException            => StatusCodes.Status404NotFound,
+            UnauthorizedAccessException  => StatusCodes.Status401Unauthorized,
+            ConflictException            => StatusCodes.Status409Conflict,
+            IdempotencyKeyReuseException => StatusCodes.Status422UnprocessableEntity,
+            ForbiddenException           => StatusCodes.Status403Forbidden,
+            TooManyRequestsException     => StatusCodes.Status429TooManyRequests,
+            DomainException              => StatusCodes.Status400BadRequest,
+            _                            => StatusCodes.Status500InternalServerError
         };
 
         var problemDetails = new ProblemDetails
         {
-            Status = status, Detail = status == StatusCodes.Status500InternalServerError ? "An error occurred" : exception.Message
+            Status = status,
+            Detail = status == StatusCodes.Status500InternalServerError ? "An error occurred" : exception.Message
         };
 
         httpContext.Response.StatusCode = status;

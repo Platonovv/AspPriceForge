@@ -10,6 +10,8 @@ public class WalletTest
 
     private const int MaxWindowSeconds = 30;
 
+    private const string EarnKey = "earn-key";
+
     private static readonly DateTime CreatedAt = new(2026, 10, 19, 12, 0, 0, DateTimeKind.Utc);
 
     private static readonly DateTime SpentAt = CreatedAt.AddMinutes(1);
@@ -19,7 +21,7 @@ public class WalletTest
     private static Wallet CreateWalletWith50Coins()
     {
         Wallet wallet = CreateWallet();
-        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt.AddSeconds(5));
+        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,CreatedAt.AddSeconds(5));
         return wallet;
     }
 
@@ -48,7 +50,7 @@ public class WalletTest
         Wallet wallet = CreateWallet();
         DateTime now = CreatedAt.AddSeconds(5);
 
-        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, now);
+        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,now);
 
         Assert.Equal(50, wallet.Balance);
         Assert.Equal(now, wallet.LastEarnedAtUtc);
@@ -58,9 +60,9 @@ public class WalletTest
     public void Earn_TwoBatches_CountsWindowFromPreviousBatch()
     {
         Wallet wallet = CreateWallet();
-        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt.AddSeconds(5));
+        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,CreatedAt.AddSeconds(5));
 
-        Assert.Throws<DomainException>(() => wallet.Earn(11, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt.AddSeconds(6)));
+        Assert.Throws<DomainException>(() => wallet.Earn(11, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,CreatedAt.AddSeconds(6)));
         Assert.Equal(50, wallet.Balance);
     }
 
@@ -69,7 +71,7 @@ public class WalletTest
     {
         Wallet wallet = CreateWallet();
 
-        wallet.Earn(300, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt);
+        wallet.Earn(300, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,CreatedAt);
 
         Assert.Equal(300, wallet.Balance);
         Assert.Equal(CreatedAt, wallet.LastEarnedAtUtc);
@@ -80,7 +82,7 @@ public class WalletTest
     {
         Wallet wallet = CreateWallet();
 
-        Assert.Throws<DomainException>(() => wallet.Earn(301, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt));
+        Assert.Throws<DomainException>(() => wallet.Earn(301, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,CreatedAt));
         Assert.Equal(0, wallet.Balance);
         Assert.Equal(default, wallet.LastEarnedAtUtc);
     }
@@ -90,9 +92,9 @@ public class WalletTest
     {
         Wallet wallet = CreateWallet();
         DateTime firstBatchAt = CreatedAt.AddSeconds(5);
-        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, firstBatchAt);
+        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,firstBatchAt);
 
-        Assert.Throws<DomainException>(() => wallet.Earn(51, MaxCoinsPerSecond, MaxWindowSeconds, firstBatchAt.AddSeconds(5)));
+        Assert.Throws<DomainException>(() => wallet.Earn(51, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,firstBatchAt.AddSeconds(5)));
         Assert.Equal(50, wallet.Balance);
         Assert.Equal(firstBatchAt, wallet.LastEarnedAtUtc);
     }
@@ -103,9 +105,9 @@ public class WalletTest
         Wallet wallet = CreateWallet();
         DateTime weekLater = CreatedAt.AddDays(7);
 
-        Assert.Throws<DomainException>(() => wallet.Earn(301, MaxCoinsPerSecond, MaxWindowSeconds, weekLater));
+        Assert.Throws<DomainException>(() => wallet.Earn(301, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,weekLater));
 
-        wallet.Earn(300, MaxCoinsPerSecond, MaxWindowSeconds, weekLater);
+        wallet.Earn(300, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,weekLater);
 
         Assert.Equal(300, wallet.Balance);
         Assert.Equal(weekLater, wallet.LastEarnedAtUtc);
@@ -116,9 +118,9 @@ public class WalletTest
     {
         Wallet wallet = CreateWallet();
         DateTime weekLater = CreatedAt.AddDays(7);
-        wallet.Earn(300, MaxCoinsPerSecond, MaxWindowSeconds, weekLater);
+        wallet.Earn(300, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,weekLater);
 
-        Assert.Throws<DomainException>(() => wallet.Earn(11, MaxCoinsPerSecond, MaxWindowSeconds, weekLater.AddSeconds(1)));
+        Assert.Throws<DomainException>(() => wallet.Earn(11, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,weekLater.AddSeconds(1)));
         Assert.Equal(300, wallet.Balance);
     }
 
@@ -126,9 +128,9 @@ public class WalletTest
     public void Earn_FromThePast_Throws()
     {
         Wallet wallet = CreateWallet();
-        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt.AddSeconds(5));
+        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,CreatedAt.AddSeconds(5));
 
-        Assert.Throws<DomainException>(() => wallet.Earn(1, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt.AddSeconds(4)));
+        Assert.Throws<DomainException>(() => wallet.Earn(1, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,CreatedAt.AddSeconds(4)));
         Assert.Equal(50, wallet.Balance);
     }
 
@@ -139,7 +141,7 @@ public class WalletTest
     {
         Wallet wallet = CreateWallet();
 
-        Assert.Throws<DomainException>(() => wallet.Earn(coins, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt.AddSeconds(5)));
+        Assert.Throws<DomainException>(() => wallet.Earn(coins, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,CreatedAt.AddSeconds(5)));
     }
 
     [Fact]
@@ -148,7 +150,7 @@ public class WalletTest
         Wallet wallet = CreateWallet();
         DateTime now = CreatedAt.AddSeconds(5);
 
-        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, now);
+        wallet.Earn(50, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,now);
 
         WalletTransaction entry = Assert.Single(wallet.Transactions);
         Assert.Equal(wallet.UserId, entry.UserId);
@@ -163,7 +165,7 @@ public class WalletTest
     {
         Wallet wallet = CreateWallet();
 
-        Assert.Throws<DomainException>(() => wallet.Earn(301, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt));
+        Assert.Throws<DomainException>(() => wallet.Earn(301, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,CreatedAt));
         Assert.Empty(wallet.Transactions);
     }
 
@@ -242,12 +244,57 @@ public class WalletTest
     public void Journal_SumOfAmounts_EqualsBalance()
     {
         Wallet wallet = CreateWallet();
-        wallet.Earn(300, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt);
+        wallet.Earn(300, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,CreatedAt);
         wallet.Spend(120, CreatedAt.AddSeconds(1));
-        wallet.Earn(100, MaxCoinsPerSecond, MaxWindowSeconds, CreatedAt.AddSeconds(20));
+        wallet.Earn(100, MaxCoinsPerSecond, MaxWindowSeconds, EarnKey,CreatedAt.AddSeconds(20));
         wallet.Spend(30, CreatedAt.AddSeconds(21));
 
         Assert.Equal(4, wallet.Transactions.Count);
         Assert.Equal(wallet.Balance, wallet.Transactions.Sum(t => t.Amount));
     }
+
+    [Fact]
+    public void Earn_WritesKeyToJournal()
+    {
+        Wallet wallet = CreateWalletWith50Coins();
+
+        Assert.Equal(EarnKey, Assert.Single(wallet.Transactions).IdempotencyKey);
+    }
+
+    [Fact]
+    public void Spend_WritesNoKeyToJournal()
+    {
+        Wallet wallet = CreateWalletWith50Coins();
+
+        wallet.Spend(10, SpentAt);
+
+        Assert.Null(wallet.Transactions[^1].IdempotencyKey);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void JournalEntry_EmptyKey_Throws(string key)
+    {
+        Assert.Throws<ArgumentException>(() => CreateJournalEntry(key));
+    }
+
+    [Fact]
+    public void JournalEntry_TooLongKey_Throws()
+    {
+        string key = new('k', WalletTransaction.MaxIdempotencyKeyLength + 1);
+
+        Assert.Throws<ArgumentException>(() => CreateJournalEntry(key));
+    }
+
+    [Fact]
+    public void JournalEntry_KeyOfMaxLength_IsAccepted()
+    {
+        string key = new('k', WalletTransaction.MaxIdempotencyKeyLength);
+
+        Assert.Equal(key, CreateJournalEntry(key).IdempotencyKey);
+    }
+
+    private static WalletTransaction CreateJournalEntry(string key)
+        => new(Guid.NewGuid(), 10, key, WalletTransactionReason.Earn, CreatedAt);
 }

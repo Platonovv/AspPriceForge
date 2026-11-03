@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Options;
+using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Game.Domain.Wallets;
 
 namespace PriceForge.Game.Application.Wallets;
@@ -35,10 +36,29 @@ public sealed class EarnCoinsHandler : IRequestHandler<EarnCoinsCommand, long>
 
             await _walletRepository.AddAsync(wallet, cancellationToken);
         }
+        else
+        {
+            WalletTransaction? walletTransaction
+                = await _walletRepository.GetByUserIdAndKeyAsync(wallet.UserId,
+                                                                 command.IdempotencyKey,
+                                                                 cancellationToken);
 
-        wallet.Earn(command.Coins, _walletSettings.MaxCoinsPerSecond, _walletSettings.MaxEarnWindowSeconds, earnAt);
+            if (walletTransaction != null)
+            {
+                return walletTransaction.Amount != command.Coins
+                           ? throw new IdempotencyKeyReuseException("IdempotencyKey used in another sum")
+                           : wallet.Balance;
+            }
+        }
+
+        wallet.Earn(command.Coins,
+                    _walletSettings.MaxCoinsPerSecond,
+                    _walletSettings.MaxEarnWindowSeconds,
+                    command.IdempotencyKey,
+                    earnAt);
 
         await _walletRepository.SaveChangesAsync(cancellationToken);
+
         return wallet.Balance;
     }
 }

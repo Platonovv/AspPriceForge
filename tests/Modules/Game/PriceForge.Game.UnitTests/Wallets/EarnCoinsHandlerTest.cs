@@ -23,7 +23,8 @@ public class EarnCoinsHandlerTest
         return new EarnCoinsHandler(Options.Create(settings), _repository, _clock);
     }
 
-    private Task<long> Earn(long coins) => CreateHandler().Handle(new EarnCoinsCommand(_userId, coins), CancellationToken.None);
+    private Task<long> Earn(long coins, string? key = null)
+        => CreateHandler().Handle(new EarnCoinsCommand(_userId, key ?? Guid.NewGuid().ToString(), coins), CancellationToken.None);
 
     [Fact]
     public async Task NoWallet_CreatesWalletAndAcceptsFullFirstWindow()
@@ -75,10 +76,41 @@ public class EarnCoinsHandlerTest
     {
         EarnCoinsHandler handler = CreateHandler(maxCoinsPerSecond: 1);
 
-        await Assert.ThrowsAsync<DomainException>(() => handler.Handle(new EarnCoinsCommand(_userId, 31), CancellationToken.None));
-        long balance = await handler.Handle(new EarnCoinsCommand(_userId, 30), CancellationToken.None);
+        await Assert.ThrowsAsync<DomainException>(() => handler.Handle(new EarnCoinsCommand(_userId, "over-limit", 31), CancellationToken.None));
+        long balance = await handler.Handle(new EarnCoinsCommand(_userId, "within-limit", 30), CancellationToken.None);
 
         Assert.Equal(30, balance);
+    }
+
+    [Fact]
+    public async Task RepeatWithSameKey_ReturnsBalanceWithoutSaving()
+    {
+        await Earn(300, "batch-1");
+
+        long balance = await Earn(300, "batch-1");
+
+        Assert.Equal(300, balance);
+        Assert.Equal(1, _repository.SaveCalls);
+        Assert.Single(Assert.Single(_repository.Saved).Transactions);
+    }
+
+    [Fact]
+    public async Task SameKeyWithDifferentAmount_ThrowsAndKeepsBalance()
+    {
+        await Earn(300, "batch-1");
+
+        await Assert.ThrowsAsync<IdempotencyKeyReuseException>(() => Earn(100, "batch-1"));
+
+        Assert.Equal(300, Assert.Single(_repository.Saved).Balance);
+        Assert.Equal(1, _repository.SaveCalls);
+    }
+
+    [Fact]
+    public async Task NoWallet_DoesNotLookUpKey()
+    {
+        await Earn(300);
+
+        Assert.Equal(0, _repository.KeyLookups);
     }
 
     private sealed class ManualTimeProvider(DateTimeOffset now) : TimeProvider
@@ -96,9 +128,18 @@ public class EarnCoinsHandlerTest
 
         public List<Wallet> Saved { get; } = [];
         public int SaveCalls { get; private set; }
+        public int KeyLookups { get; private set; }
 
         public Task<Wallet?> GetByUserIdAsync(Guid userId, CancellationToken ct)
             => Task.FromResult(Saved.FirstOrDefault(w => w.UserId == userId));
+
+        public Task<WalletTransaction?> GetByUserIdAndKeyAsync(Guid userId, string idempotencyKey, CancellationToken ct)
+        {
+            KeyLookups++;
+            WalletTransaction? entry = Saved.SelectMany(w => w.Transactions)
+                                            .FirstOrDefault(t => t.UserId == userId && t.IdempotencyKey == idempotencyKey);
+            return Task.FromResult(entry);
+        }
 
         public Task<Wallet?> GetByUserIdForUpdateAsync(Guid userId, CancellationToken ct)
             => GetByUserIdAsync(userId, ct);

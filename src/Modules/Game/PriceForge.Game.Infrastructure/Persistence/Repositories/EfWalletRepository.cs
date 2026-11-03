@@ -19,6 +19,11 @@ internal sealed class EfWalletRepository : IWalletRepository
     public Task<Wallet?> GetByUserIdAsync(Guid userId, CancellationToken ct)
         => _dbContext.Wallets.FirstOrDefaultAsync(w => w.UserId == userId, ct);
 
+    public Task<WalletTransaction?> GetByUserIdAndKeyAsync(Guid userId, string idempotencyKey, CancellationToken ct)
+        => _dbContext.WalletTransactions.FirstOrDefaultAsync(
+            x => x.UserId == userId && x.IdempotencyKey == idempotencyKey,
+            ct);
+
     public Task<Wallet?> GetByUserIdForUpdateAsync(Guid userId, CancellationToken ct)
         => _dbContext.Wallets
                      .FromSql(
