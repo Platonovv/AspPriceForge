@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using PriceForge.BuildingBlocks.Exceptions;
 using PriceForge.Game.Application.Transactions;
 using PriceForge.Game.Application.Wallets;
 using PriceForge.Game.Domain.Wallets;
@@ -93,6 +94,62 @@ public class WalletLockTests : IClassFixture<ApiFactory>
         await first.WaitAsync(TestTimeout);
         await second.WaitAsync(TestTimeout);
     }
+
+    [Fact]
+    public async Task TwoEarnsFromSameVersion_SecondGetsConflictAndNothingIsLost()
+    {
+        Guid userId = await CreateWalletWithCoinsAsync("wallet-earn-race@priceforge.test");
+
+        using IServiceScope firstScope = _factory.Services.CreateScope();
+        using IServiceScope secondScope = _factory.Services.CreateScope();
+        IWalletRepository firstRepository = firstScope.ServiceProvider.GetRequiredService<IWalletRepository>();
+        IWalletRepository secondRepository = secondScope.ServiceProvider.GetRequiredService<IWalletRepository>();
+
+        Wallet? firstWallet = await firstRepository.GetByUserIdAsync(userId, CancellationToken.None);
+        Wallet? secondWallet = await secondRepository.GetByUserIdAsync(userId, CancellationToken.None);
+
+        Assert.NotNull(firstWallet);
+        Assert.NotNull(secondWallet);
+        EarnFifty(firstWallet);
+        EarnFifty(secondWallet);
+
+        await firstRepository.SaveChangesAsync(CancellationToken.None);
+        await Assert.ThrowsAsync<ConflictException>(
+            () => secondRepository.SaveChangesAsync(CancellationToken.None));
+
+        using IServiceScope checkScope = _factory.Services.CreateScope();
+        GameDbContext db = checkScope.ServiceProvider.GetRequiredService<GameDbContext>();
+
+        Wallet saved = await db.Wallets.AsNoTracking().SingleAsync(w => w.UserId == userId);
+        long journalSum = await db.WalletTransactions.AsNoTracking()
+                                  .Where(t => t.UserId == userId)
+                                  .SumAsync(t => t.Amount);
+
+        Assert.Equal(150, saved.Balance);
+        Assert.Equal(saved.Balance, journalSum);
+    }
+
+    [Fact]
+    public async Task TwoFirstEarnsCreatingWallet_SecondGetsConflict()
+    {
+        Guid userId = Guid.NewGuid();
+        DateTime createdAt = DateTime.UtcNow;
+
+        using IServiceScope firstScope = _factory.Services.CreateScope();
+        using IServiceScope secondScope = _factory.Services.CreateScope();
+        IWalletRepository firstRepository = firstScope.ServiceProvider.GetRequiredService<IWalletRepository>();
+        IWalletRepository secondRepository = secondScope.ServiceProvider.GetRequiredService<IWalletRepository>();
+
+        await firstRepository.AddAsync(new Wallet(userId, createdAt), CancellationToken.None);
+        await secondRepository.AddAsync(new Wallet(userId, createdAt), CancellationToken.None);
+
+        await firstRepository.SaveChangesAsync(CancellationToken.None);
+        await Assert.ThrowsAsync<ConflictException>(
+            () => secondRepository.SaveChangesAsync(CancellationToken.None));
+    }
+
+    private static void EarnFifty(Wallet wallet)
+        => wallet.Earn(50, 20, 30, wallet.LastEarnedAtUtc.AddSeconds(10));
 
     private async Task RunLockedAsync(Guid userId, Func<Task> whileLocked)
     {
