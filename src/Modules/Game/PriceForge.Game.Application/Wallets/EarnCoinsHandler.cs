@@ -36,7 +36,7 @@ public sealed class EarnCoinsHandler : IRequestHandler<EarnCoinsCommand, long>
             await _walletRepository.AddAsync(wallet, cancellationToken);
         }
 
-        wallet.Earn(command.EarnMoney, _walletSettings.MaxCoinsPerSecond, _walletSettings.MaxEarnWindowSeconds, earnAt);
+        wallet.Earn(command.Coins, _walletSettings.MaxCoinsPerSecond, _walletSettings.MaxEarnWindowSeconds, earnAt);
 
         await _walletRepository.SaveChangesAsync(cancellationToken);
         return wallet.Balance;

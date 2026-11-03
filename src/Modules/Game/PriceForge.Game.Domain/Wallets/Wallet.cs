@@ -32,11 +32,11 @@ public sealed class Wallet
     {
     }
 
-    public void Earn(long earnMoney, int maxCoinsPerSecond, int maxEarnWindowSeconds, DateTime earnedAt)
+    public void Earn(long coins, int maxCoinsPerSecond, int maxEarnWindowSeconds, DateTime earnedAt)
     {
-        if (earnMoney <= 0)
+        if (coins <= 0)
         {
-            throw new DomainException("EarnMoney cannot be negative or zero");
+            throw new DomainException("Coins cannot be negative or zero");
         }
 
         if (earnedAt == DateTime.MinValue)
@@ -60,15 +60,15 @@ public sealed class Wallet
         double windowSeconds = Math.Min(sinceLastEarn.TotalSeconds, maxEarnWindowSeconds);
         double limit = maxCoinsPerSecond * windowSeconds;
 
-        if (earnMoney > limit)
+        if (coins > limit)
         {
-            throw new DomainException("EarnMoney cannot exceed maximum amount of money");
+            throw new DomainException("Coins cannot exceed maximum amount of money");
         }
 
-        Balance += earnMoney;
+        Balance += coins;
         LastEarnedAtUtc = earnedAt;
 
-        WalletTransaction walletTransaction = new WalletTransaction(UserId, earnMoney, WalletTransactionReason.Earn, earnedAt);
+        WalletTransaction walletTransaction = new WalletTransaction(UserId, coins, WalletTransactionReason.Earn, earnedAt);
         _transactions.Add(walletTransaction);
     }
 

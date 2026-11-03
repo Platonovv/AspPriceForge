@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PriceForge.BuildingBlocks.Exceptions;
@@ -172,7 +171,7 @@ public class WalletLockTests : IClassFixture<ApiFactory>
         client.DefaultRequestHeaders.Add(TestAuthHandler.AuthHeader, "true");
         Guid userId = await client.RegisterAndImpersonateAsync(email);
 
-        HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/wallet/earn", new {EarnMoney = 100});
+        HttpResponseMessage response = await client.EarnAsync(100);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         return userId;

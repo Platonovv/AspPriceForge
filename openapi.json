@@ -1925,7 +1925,7 @@
         "tags": [
           "Wallet"
         ],
-        "operationId": "Wallet_EarnMoney",
+        "operationId": "Wallet_EarnCoins",
         "requestBody": {
           "x-name": "earnCoinsRequest",
           "content": {
@@ -2510,7 +2510,7 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "earnMoney": {
+          "coins": {
             "type": "integer",
             "format": "int64"
           }

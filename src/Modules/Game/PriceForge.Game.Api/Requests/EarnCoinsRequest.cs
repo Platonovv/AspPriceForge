@@ -1,3 +1,3 @@
 namespace PriceForge.Game.Api.Requests;
 
-public sealed record EarnCoinsRequest(long EarnMoney);
+public sealed record EarnCoinsRequest(long Coins);

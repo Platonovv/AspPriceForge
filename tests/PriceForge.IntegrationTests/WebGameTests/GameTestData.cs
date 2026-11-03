@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PriceForge.Game.Infrastructure.Persistence;
@@ -10,6 +11,15 @@ public static class GameTestData
     public static readonly Guid GoldenSwordId = Guid.Parse("0b9d3c1e-6a51-4f7e-9c2a-3e5f1a7b8c01");
     public static readonly Guid SpeedBoostId = Guid.Parse("0b9d3c1e-6a51-4f7e-9c2a-3e5f1a7b8c02");
     public const long SpeedBoostPrice = 150;
+
+    public static async Task<HttpResponseMessage> EarnAsync(this HttpClient client, long coins, string? idempotencyKey = null)
+    {
+        using HttpRequestMessage request = new(HttpMethod.Post, "/api/v1/wallet/earn");
+        request.Headers.Add("Idempotency-Key", idempotencyKey ?? Guid.NewGuid().ToString());
+        request.Content = JsonContent.Create(new {Coins = coins});
+
+        return await client.SendAsync(request);
+    }
 
     public static async Task SeedGameItemsAsync(this ApiFactory factory)
     {

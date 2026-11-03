@@ -125,7 +125,7 @@ public class GamePurchaseEndpointTests : IClassFixture<ApiFactory>
         client.DefaultRequestHeaders.Add(TestAuthHandler.AuthHeader, "true");
         await client.RegisterAndImpersonateAsync(email);
 
-        HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/wallet/earn", new {EarnMoney = coins});
+        HttpResponseMessage response = await client.EarnAsync(coins);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         return client;
