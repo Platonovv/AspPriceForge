@@ -16,4 +16,7 @@ internal sealed class EfGameItemRepository : IGameItemRepository
 
     public Task<GameItem?> GetByProductIdAsync(Guid productId, CancellationToken ct)
         => _dbContext.GameItems.AsNoTracking().FirstOrDefaultAsync(i => i.ProductId == productId, ct);
+
+    public Task<List<GameItem>> GetAllAsync(CancellationToken ct)
+        => _dbContext.GameItems.AsNoTracking().OrderBy(i => i.CoinPrice).ToListAsync(ct);
 }

@@ -3,4 +3,5 @@ namespace PriceForge.Catalog.Contracts;
 public interface ICatalogModuleApi
 {
     Task<CatalogProductDto?> GetProductAsync(Guid productId, CancellationToken ct);
+    Task<List<CatalogProductDto>> GetProductsAsync(List<Guid> productIds, CancellationToken ct);
 }

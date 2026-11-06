@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using PriceForge.BuildingBlocks.Security;
 using PriceForge.BuildingBlocks.Web.Filters;
 using PriceForge.Game.Api.Requests;
+using PriceForge.Game.Application.Items;
 using PriceForge.Game.Application.Purchases;
 
 namespace PriceForge.Game.Api.Controllers;
@@ -21,6 +22,15 @@ public class GameController : ControllerBase
         ArgumentNullException.ThrowIfNull(sender);
 
         _sender = sender;
+    }
+
+    [HttpGet("items")]
+    [ProducesResponseType(typeof(List<GameItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetItems(CancellationToken cancellationToken)
+    {
+        List<GameItemDto> items = await _sender.Send(new GetGameItemsQuery(), cancellationToken);
+        return Ok(items);
     }
 
     [ServiceFilter(typeof(IdempotencyFilter))]

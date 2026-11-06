@@ -19,4 +19,11 @@ internal sealed class CatalogModuleApi : ICatalogModuleApi
 
         return product == null ? null : new CatalogProductDto(product.Id, product.Name);
     }
+
+    public async Task<List<CatalogProductDto>> GetProductsAsync(List<Guid> productIds, CancellationToken ct)
+    {
+        List<Product> products = await _productRepository.GetByIdsAsync(productIds, ct);
+
+        return products.Select(product => new CatalogProductDto(product.Id, product.Name)).ToList();
+    }
 }

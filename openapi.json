@@ -1804,6 +1804,39 @@
         }
       }
     },
+    "/api/v1/game/items": {
+      "get": {
+        "tags": [
+          "Game"
+        ],
+        "operationId": "Game_GetItems",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GameItemDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/game/purchases": {
       "post": {
         "tags": [
@@ -2492,6 +2525,23 @@
           },
           "newPassword": {
             "type": "string"
+          }
+        }
+      },
+      "GameItemDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "coinPrice": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
