@@ -6,7 +6,7 @@
     container_name: priceforge-api
     restart: unless-stopped
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=priceforge;Username=priceforge;Password=${DB_PASSWORD};Include Error Detail=true"
       ConnectionStrings__Redis: "redis:6379"
       ConnectionStrings__RabbitMq: "amqp://priceforge:${DB_PASSWORD}@rabbitmq:5672/"
@@ -31,6 +31,7 @@
       Storage__Bucket: "product-images"
       EmailSettings__FrontendBaseUrl: "http://localhost:3000"
       ForwardedHeaders__KnownProxies__0: "172.30.0.10"
+      Cors__AllowedOrigins__0: "http://localhost:8000"
     ports:
       - "8080:8080"
     volumes:
