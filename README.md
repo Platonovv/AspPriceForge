@@ -54,7 +54,7 @@ flowchart LR
 
 **Аутентификация — JWT access + refresh** ([ADR-004](docs/adr/004-jwt-refresh.md)). Короткий access-токен и ротация refresh-токена при каждом обновлении. Выход отзывает access-токен по `jti` (denylist в Redis), сброс пароля отзывает все токены пользователя. Пароли — BCrypt, токены из писем хранятся хэшами. Вход ограничен по IP (`RateLimiter`) и по аккаунту (счётчик попыток в Redis); снаружи — nginx reverse proxy.
 
-**Наблюдаемость.** Структурные логи Serilog в Elasticsearch (Kibana) с correlation id, трассировка и метрики OpenTelemetry через OTel Collector в Jaeger и Prometheus, Grafana для графиков, health checks `/health/live` и `/health/ready` (PostgreSQL, Redis). Ошибки отдаются в формате ProblemDetails.
+**Наблюдаемость.** Структурные логи Serilog, трассировка и метрики OpenTelemetry через OTel Collector: логи в Elasticsearch (Kibana) с correlation id и trace id, трейсы в Jaeger, метрики в Prometheus, Grafana для графиков, health checks `/health/live` и `/health/ready` (PostgreSQL, Redis). Ошибки отдаются в формате ProblemDetails.
 
 ## Быстрый старт
 

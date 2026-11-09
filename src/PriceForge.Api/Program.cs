@@ -1,7 +1,4 @@
 using System.Net;
-using Elastic.Ingest.Elasticsearch;
-using Elastic.Ingest.Elasticsearch.DataStreams;
-using Elastic.Serilog.Sinks;
 using Microsoft.AspNetCore.HttpOverrides;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -23,12 +20,10 @@ builder.Host.UseSerilog((context, configuration) =>
 {
     configuration.WriteTo.Console(
         outputTemplate: "{Timestamp:HH:mm:ss} [{Level:u3}] {CorrelationId} {Message:lj}{NewLine}{Exception}");
-    configuration.WriteTo.Elasticsearch([new Uri(context.Configuration.GetConnectionString("Elasticsearch")!)],
-                                        opts =>
-                                        {
-                                            opts.DataStream = new DataStreamName("logs", "priceforge");
-                                            opts.BootstrapMethod = BootstrapMethod.Silent;
-                                        });
+    configuration.WriteTo.OpenTelemetry(options => options.ResourceAttributes = new Dictionary<string, object>
+    {
+        ["service.name"] = "PriceForge.Api"
+    });
     configuration.ReadFrom.Configuration(context.Configuration);
     configuration.Enrich.FromLogContext();
     configuration.MinimumLevel.Override("Microsoft", LogEventLevel.Warning);

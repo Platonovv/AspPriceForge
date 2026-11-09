@@ -11,7 +11,6 @@
       ConnectionStrings__Redis: "redis:6379"
       ConnectionStrings__RabbitMq: "amqp://priceforge:${DB_PASSWORD}@rabbitmq:5672/"
       ConnectionStrings__Mongo: "mongodb://priceforge:${DB_PASSWORD}@mongo:27017/"
-      ConnectionStrings__Elasticsearch: "http://elasticsearch:9200"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
       Jwt__Issuer: PriceForge
       Jwt__Audience: PriceForgeUsers
@@ -155,7 +154,7 @@
       - '127.0.0.1:8889:8889'
     volumes:
       - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
-    depends_on: [ jaeger ]
+    depends_on: [ jaeger, elasticsearch ]
 
   prometheus:
     image: prom/prometheus:v2.54.1
